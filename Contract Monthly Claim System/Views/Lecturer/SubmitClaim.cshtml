@@ -1,0 +1,175 @@
+﻿@model Contract_Monthly_Claim_System.Models.Claim
+@{
+    var currentUser = ViewBag.CurrentUser as Contract_Monthly_Claim_System.Models.User;
+}
+
+<div class="card card-action">
+    <div class="card-body">
+        <h4 class="card-title">Submit Monthly Claim</h4>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">
+                @TempData["Success"]
+            </div>
+        }
+
+        @if (TempData["Warning"] != null)
+        {
+            <div class="alert alert-warning">
+                @TempData["Warning"]
+            </div>
+        }
+
+        @if (currentUser == null)
+        {
+            <div class="alert alert-danger">
+                <strong>Error:</strong> User information not found. Please <a href="@Url.Action("Login", "Auth")">login again</a>.
+            </div>
+        }
+
+        <p class="text-muted">Fields marked with <span class="text-danger">*</span> are required.</p>
+
+        <form asp-action="SubmitClaim" method="post" enctype="multipart/form-data" id="claimForm">
+            @Html.AntiForgeryToken()
+
+            <!-- Hidden field for userId - automatically set to logged-in user -->
+            <input type="hidden" asp-for="userId" value="@currentUser?.userId" />
+
+            <div class="row g-3">
+
+                <!-- Hours Worked Input -->
+                <div class="col-md-6">
+                    <label class="form-label">Hours Worked <span class="text-danger">*</span></label>
+                    <input asp-for="hoursWorked" type="number" step="0.5" class="form-control" required
+                           min="0.5" max="180" id="hoursWorked"
+                           placeholder="Enter hours worked (0.5 - 180)" />
+                    <span asp-validation-for="hoursWorked" class="text-danger"></span>
+                    <div id="hoursWorkedError" class="text-danger small mt-1" style="display: none;"></div>
+                    <div class="form-text">Must be between 0.5 and 180 hours per month</div>
+                </div>
+
+                <!-- Hourly Rate Display -->
+                <div class="col-md-6">
+                    <label class="form-label">Hourly Rate (R)</label>
+                    <div class="input-group">
+                        <span class="input-group-text">R</span>
+                        <input type="text" class="form-control bg-light" id="hourlyRateDisplay" readonly
+                               value="@(currentUser?.hourlyRate.ToString("F2") ?? "0.00")" />
+                    </div>
+                    <div class="form-text text-info">
+                        <small>Your hourly rate is set by HR and cannot be modified.</small>
+                    </div>
+                </div>
+
+                <!-- Total Amount Calculation -->
+                <div class="col-12">
+                    <label class="form-label">Total Amount (R)</label>
+                    <div class="input-group">
+                        <span class="input-group-text">R</span>
+                        <input type="text" class="form-control bg-light fw-bold text-success" id="totalAmount" readonly value="0.00" />
+                    </div>
+                    <div class="form-text">
+                        <small>Calculated automatically: Hours Worked × Hourly Rate</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <hr />
+                <h6>Supporting Documents</h6>
+                <div class="mb-3">
+                    <label class="form-label">Upload Documents</label>
+                    <input type="file" name="documents" class="form-control" accept=".pdf,.docx,.xlsx" multiple id="fileUpload" />
+                    <div class="form-text">
+                        <strong>Accepted formats:</strong> PDF, DOCX, XLSX<br />
+                        <strong>Maximum file size:</strong> 10MB per file
+                    </div>
+                    <div id="fileList" class="mt-2"></div>
+                    <div id="fileError" class="text-danger small mt-1" style="display: none;"></div>
+                </div>
+
+                <!-- Additional Notes -->
+                <div class="mb-3">
+                    <label class="form-label">Additional Notes</label>
+                    <textarea asp-for="Notes" class="form-control" rows="3"
+                              placeholder="E.g., Public holiday hours, extra duties, specific projects..."
+                              maxlength="500"></textarea>
+                    <span asp-validation-for="Notes" class="text-danger"></span>
+                    <div class="form-text">
+                        <span id="notesCounter">0</span>/500 characters (optional)
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                <a href="@Url.Action("Dashboard", "Lecturer")" class="btn btn-outline-secondary">
+                    ← Back to Dashboard
+                </a>
+                <div>
+                    <button type="reset" class="btn btn-outline-danger me-2">Clear Form</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn" @(currentUser == null ? "disabled" : "")>
+                        Submit Claim
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Get the hourly rate from the current user
+        const hourlyRate = @(currentUser?.hourlyRate ?? 0);
+
+        function calculateTotal() {
+            const hours = parseFloat($('#hoursWorked').val()) || 0;
+            const hoursError = $('#hoursWorkedError');
+
+            // Validation
+            if (hours > 180) {
+                hoursError.text('Hours worked cannot exceed 180 hours per month.').show();
+                $('#submitBtn').prop('disabled', true);
+                $('#totalAmount').val('0.00');
+                return;
+            } else if (hours < 0.5 && hours > 0) {
+                hoursError.text('Hours worked must be at least 0.5 hours.').show();
+                $('#submitBtn').prop('disabled', true);
+                $('#totalAmount').val('0.00');
+                return;
+            } else if (hours === 0) {
+                hoursError.hide();
+                $('#submitBtn').prop('disabled', true);
+                $('#totalAmount').val('0.00');
+                return;
+            } else {
+                hoursError.hide();
+                $('#submitBtn').prop('disabled', false);
+            }
+
+            // Calculate total
+            const total = hours * hourlyRate;
+            $('#totalAmount').val('R ' + total.toFixed(2));
+        }
+
+        function updateNotesCounter() {
+            const notes = $('#Notes').val();
+            $('#notesCounter').text(notes.length);
+        }
+
+        $(document).ready(function() {
+            // Initial setup
+            calculateTotal();
+            updateNotesCounter();
+
+            // Event handlers
+            $('#hoursWorked').on('input', calculateTotal);
+            $('#Notes').on('input', updateNotesCounter);
+
+            // Auto-calculate if there's already a value
+            if ($('#hoursWorked').val()) {
+                calculateTotal();
+            }
+        });
+    </script>
+}

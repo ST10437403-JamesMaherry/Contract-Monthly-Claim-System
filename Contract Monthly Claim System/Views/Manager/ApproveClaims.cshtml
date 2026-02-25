@@ -1,0 +1,266 @@
+﻿@model List<Contract_Monthly_Claim_System.Models.Claim>
+@{
+    var allDocuments = ViewBag.Documents as List<Contract_Monthly_Claim_System.Models.Document> ?? new List<Contract_Monthly_Claim_System.Models.Document>();
+    var users = ViewBag.Users as List<Contract_Monthly_Claim_System.Models.User> ?? new List<Contract_Monthly_Claim_System.Models.User>();
+    var currentFilter = ViewBag.CurrentFilter as string ?? "pending";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4>Claim Management - Academic Manager</h4>
+    <div class="d-flex align-items-center gap-3">
+        <!-- Filter Dropdown -->
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                @(currentFilter switch
+                {
+                    "all" => "All Claims",
+                    "past" => "My Processed Claims",
+                    "approved" => "Ready for Payment",
+                    "paid" => "Paid Claims",
+                    _ => "Pending My Review"
+                })
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item @(currentFilter == "pending" ? "active" : "")" href="@Url.Action("ApproveClaims", new { filter = "pending" })">Pending My Review</a></li>
+                <li><a class="dropdown-item @(currentFilter == "past" ? "active" : "")" href="@Url.Action("ApproveClaims", new { filter = "past" })">My Processed Claims</a></li>
+                <li><a class="dropdown-item @(currentFilter == "approved" ? "active" : "")" href="@Url.Action("ApproveClaims", new { filter = "approved" })">Ready for Payment</a></li>
+                <li><a class="dropdown-item @(currentFilter == "paid" ? "active" : "")" href="@Url.Action("ApproveClaims", new { filter = "paid" })">Paid Claims</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item @(currentFilter == "all" ? "active" : "")" href="@Url.Action("ApproveClaims", new { filter = "all" })">All Claims</a></li>
+            </ul>
+        </div>
+        <span class="badge bg-info">@Model.Count Claims</span>
+    </div>
+</div>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (!Model.Any())
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <h5 class="text-muted">No claims found</h5>
+            <p class="text-muted">
+                @(currentFilter switch
+                {
+                    "all" => "There are no claims in the system.",
+                    "past" => "You haven't processed any claims yet.",
+                    "approved" => "No claims are ready for payment.",
+                    "paid" => "No claims have been marked as paid yet.",
+                    _ => "No claims are pending your review. All coordinator-verified claims have been processed."
+                })
+            </p>
+            @if (currentFilter != "all")
+            {
+                <a href="@Url.Action("ApproveClaims", new { filter = "all" })" class="btn btn-outline-primary mt-2">View All Claims</a>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <!-- Filter Description -->
+    <div class="alert @(currentFilter == "pending" ? "alert-warning" : "alert-info")">
+        <strong>Viewing:</strong>
+        @(currentFilter switch
+        {
+            "all" => "All claims in the system",
+            "past" => "Claims you have already processed (approved, rejected, or paid)",
+            "approved" => "Claims approved by you and ready for payment",
+            "paid" => "Claims that have been paid",
+            _ => "Claims pending your final decision (verified by coordinators)"
+        })
+        @if (currentFilter == "pending")
+        {
+            <br />
+        
+            <small>Includes both coordinator-approved and coordinator-rejected claims for your final decision.</small>
+        }
+    </div>
+
+    <div class="row g-4">
+        @foreach (var claim in Model.OrderByDescending(c => c.submissionDate))
+        {
+            var user = users.FirstOrDefault(u => u.userId == claim.userId);
+            var claimDocuments = allDocuments.Where(d => d.claimId == claim.claimId).ToList();
+
+            string statusBadge = "";
+            string statusText = "";
+            bool showActions = false;
+
+            switch (claim.statusId)
+            {
+                case 1: // Submitted
+                    statusBadge = "bg-warning";
+                    statusText = "Submitted";
+                    showActions = false; // Not verified by coordinator yet
+                    break;
+                case 2: // Approved by Coordinator
+                    statusBadge = "bg-info";
+                    statusText = "Coordinator Approved";
+                    showActions = true; // Ready for manager decision
+                    break;
+                case 3: // Approved by Manager
+                    statusBadge = "bg-success";
+                    statusText = "Ready for Payment";
+                    showActions = (currentFilter == "all" || currentFilter == "approved"); // Only show payment action in specific views
+                    break;
+                case 4: // Rejected by Coordinator
+                    statusBadge = "bg-danger";
+                    statusText = "Coordinator Rejected";
+                    showActions = true; // Manager can override coordinator rejection
+                    break;
+                case 5: // Rejected by Manager
+                    statusBadge = "bg-danger";
+                    statusText = "Manager Rejected";
+                    showActions = false; // Already processed
+                    break;
+                case 6: // Paid
+                    statusBadge = "bg-success";
+                    statusText = "Paid";
+                    showActions = false; // Final state
+                    break;
+            }
+
+            <div class="col-12">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Claim #@claim.claimId</h5>
+                        <span class="badge @statusBadge">@statusText</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <p><strong>Lecturer:</strong> @(user?.firstName + " " + user?.lastName ?? "Unknown")</p>
+                                <p><strong>User ID:</strong> @claim.userId</p>
+                                <p><strong>Submitted:</strong> @claim.submissionDate.ToString("dd MMM yyyy")</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Hours Worked:</strong> @claim.hoursWorked</p>
+                                <p><strong>Hourly Rate:</strong> R @claim.hourlyRate</p>
+                                <p><strong>Total Amount:</strong> R @claim.totalAmount</p>
+                            </div>
+                        </div>
+
+                        <!-- Lecturer Notes -->
+                        @if (!string.IsNullOrEmpty(claim.Notes))
+                        {
+                            <div class="mb-3 p-3 bg-light rounded">
+                                <strong>Lecturer Notes:</strong>
+                                <p class="mb-0">@claim.Notes</p>
+                            </div>
+                        }
+
+                        <!-- Documents -->
+                        @if (claimDocuments.Any())
+                        {
+                            <div class="mb-3">
+                                <strong>Supporting Documents:</strong>
+                                <div class="mt-2">
+                                    @foreach (var doc in claimDocuments)
+                                    {
+                                        <div class="d-flex justify-content-between align-items-center p-2 border rounded mb-2">
+                                            <span>@doc.fileName</span>
+                                            <a href="@Url.Action("DownloadDocument", "Manager", new { documentId = doc.documentId })"
+                                               class="btn btn-sm btn-outline-primary">Download</a>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Action Buttons -->
+                        @if (showActions)
+                        {
+                            <div class="d-flex gap-2 flex-wrap">
+                                <!-- Manager can override coordinator decisions for both approved and rejected claims -->
+                                @if (claim.statusId == 2 || claim.statusId == 4)
+                                {
+                                    <form method="post" action="@Url.Action("FinalApprove", "Manager")" class="mb-2">
+                                        <input type="hidden" name="claimId" value="@claim.claimId" />
+                                        <button type="submit" class="btn btn-success">
+                                            ✅ Approve Claim
+                                        </button>
+                                    </form>
+                                
+                                    <form method="post" action="@Url.Action("RejectClaim", "Manager")" class="mb-2">
+                                        <input type="hidden" name="claimId" value="@claim.claimId" />
+                                        <button type="submit" class="btn btn-danger">
+                                            ❌ Reject Claim
+                                        </button>
+                                    </form>
+                                }
+
+                                <!-- Payment action only for manager-approved claims -->
+                                @if (claim.statusId == 3 && (currentFilter == "all" || currentFilter == "approved"))
+                                {
+                                    <form method="post" action="@Url.Action("MarkAsPaid", "Manager")" class="mb-2">
+                                        <input type="hidden" name="claimId" value="@claim.claimId" />
+                                        <button type="submit" class="btn btn-success">💰 Mark as Paid</button>
+                                    </form>
+                                }
+                            </div>
+                        }
+                        else if (claim.statusId == 3 && (currentFilter == "all" || currentFilter == "approved"))
+                        {
+                            <!-- Show only payment button for approved claims in appropriate views -->
+                            <div class="d-flex gap-2 flex-wrap">
+                                <form method="post" action="@Url.Action("MarkAsPaid", "Manager")" class="mb-2">
+                                    <input type="hidden" name="claimId" value="@claim.claimId" />
+                                    <button type="submit" class="btn btn-success">💰 Mark as Paid</button>
+                                </form>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-muted">
+                                <small>This claim has been processed and no further actions are available.</small>
+                            </div>
+                        }
+
+                        <!-- Progress Bar -->
+                        <div class="progress mt-3" style="height: 8px;">
+                            @{
+                                int progress = 0;
+                                string progressColor = "bg-warning";
+
+                                if (claim.statusId == 2 || claim.statusId == 4)
+                                {
+                                    progress = 50;
+                                    progressColor = claim.statusId == 4 ? "bg-danger" : "bg-info";
+                                }
+                                else if (claim.statusId == 3 || claim.statusId == 5)
+                                {
+                                    progress = 75;
+                                    progressColor = claim.statusId == 5 ? "bg-danger" : "bg-success";
+                                }
+                                else if (claim.statusId == 6)
+                                {
+                                    progress = 100;
+                                    progressColor = "bg-success";
+                                }
+                                else
+                                {
+                                    progress = 25;
+                                }
+                            }
+                            <div class="progress-bar @progressColor" style="width: @progress%"></div>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted mt-1">
+                            <span>Submitted</span>
+                            <span>Coordinator</span>
+                            <span>Manager</span>
+                            <span>Payment</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

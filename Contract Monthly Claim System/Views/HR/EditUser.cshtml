@@ -1,0 +1,68 @@
+﻿@model Contract_Monthly_Claim_System.Models.EditUserViewModel
+
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title">Edit User</h4>
+
+        <form asp-action="EditUser" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="userId" />
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">First Name *</label>
+                    <input asp-for="firstName" class="form-control" required />
+                    <span asp-validation-for="firstName" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Last Name *</label>
+                    <input asp-for="lastName" class="form-control" required />
+                    <span asp-validation-for="lastName" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Email *</label>
+                    <input asp-for="email" type="email" class="form-control" required />
+                    <span asp-validation-for="email" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Phone Number</label>
+                    <input asp-for="phoneNumber" class="form-control" />
+                    <span asp-validation-for="phoneNumber" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">User Role *</label>
+                    <select asp-for="userRole" class="form-select" required>
+                        <option value="">Select Role</option>
+                        <option value="Lecturer">Lecturer</option>
+                        <option value="Coordinator">Programme Coordinator</option>
+                        <option value="Manager">Academic Manager</option>
+                        <option value="HR">HR Administrator</option>
+                    </select>
+                    <span asp-validation-for="userRole" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Hourly Rate (R) *</label>
+                    <div class="input-group">
+                        <span class="input-group-text">R</span>
+                        <input asp-for="hourlyRate" type="number" step="0.01" class="form-control" required min="50" max="1000" />
+                    </div>
+                    <span asp-validation-for="hourlyRate" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="@Url.Action("HRDashboard", "HR")" class="btn btn-outline-secondary">← Back to Users</a>
+                <button type="submit" class="btn btn-primary">Update User</button>
+            </div>
+        </form>
+    </div>
+</div>

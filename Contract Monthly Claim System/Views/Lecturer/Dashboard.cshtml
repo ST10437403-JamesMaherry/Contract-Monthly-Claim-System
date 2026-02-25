@@ -1,0 +1,339 @@
+﻿@model List<Contract_Monthly_Claim_System.Models.Claim>
+@{
+    var claims = Model ?? new List<Contract_Monthly_Claim_System.Models.Claim>();
+    var lecturers = ViewBag.Lecturers as List<Contract_Monthly_Claim_System.Models.User> ?? new List<Contract_Monthly_Claim_System.Models.User>();
+    var currentUser = ViewBag.CurrentUser as Contract_Monthly_Claim_System.Models.User;
+    var currentUserId = ViewBag.CurrentUserId as int? ?? 1;
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row g-4 mb-5">
+    <div class="col-md-6">
+        <div class="card card-action card-hover h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">Submit New Claim</h5>
+                <p class="card-text">Submit hours worked and supporting documents</p>
+                <a href="@Url.Action("SubmitClaim", "Lecturer")" class="btn btn-primary">Submit Claim</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card card-hover h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title">Claim Statistics</h5>
+                @{
+                    var totalClaims = claims.Count;
+                    var approvedClaims = claims.Count(c => c.statusId == 3 || c.statusId == 6);
+                    var pendingClaims = claims.Count(c => c.statusId == 1 || c.statusId == 2);
+                    var rejectedClaims = claims.Count(c => c.statusId == 4 || c.statusId == 5);
+                }
+                <div class="row text-center">
+                    <div class="col-3">
+                        <div class="stat-number">@totalClaims</div>
+                        <small class="stat-label">Total</small>
+                    </div>
+                    <div class="col-3">
+                        <div class="stat-number text-success">@approvedClaims</div>
+                        <small class="stat-label">Approved</small>
+                    </div>
+                    <div class="col-3">
+                        <div class="stat-number text-warning">@pendingClaims</div>
+                        <small class="stat-label">Pending</small>
+                    </div>
+                    <div class="col-3">
+                        <div class="stat-number text-danger">@rejectedClaims</div>
+                        <small class="stat-label">Rejected</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h4 class="mb-4">
+    @if (currentUser != null)
+    {
+        <text>@currentUser.firstName @currentUser.lastName's Claims</text>
+    }
+    else
+    {
+        <text>My Claims</text>
+    }
+</h4>
+
+@if (!claims.Any())
+{
+    <div class="card card-hover">
+        <div class="card-body text-center py-5 empty-state">
+            <div class="empty-state-icon">📝</div>
+            <h5 class="text-muted">No claims submitted yet</h5>
+            <p class="text-muted">Get started by submitting your first claim</p>
+            <a href="@Url.Action("SubmitClaim", "Lecturer")" class="btn btn-primary">Submit Your First Claim</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var claim in claims.OrderByDescending(c => c.submissionDate))
+        {
+            string statusText = "";
+            string statusColor = "";
+            int progress = 0;
+
+            switch (claim.statusId)
+            {
+                case 1: // Submitted
+                    statusText = "Submitted - Under Review";
+                    statusColor = "warning";
+                    progress = 25;
+                    break;
+                case 2: // Approved by Coordinator
+                    statusText = "Approved by Coordinator";
+                    statusColor = "info";
+                    progress = 50;
+                    break;
+                case 3: // Approved by Manager
+                    statusText = "Approved - Ready for Payment";
+                    statusColor = "success";
+                    progress = 75;
+                    break;
+                case 4: // Rejected by Coordinator
+                    statusText = "Rejected by Coordinator";
+                    statusColor = "danger";
+                    progress = 50;
+                    break;
+                case 5: // Rejected by Manager
+                    statusText = "Rejected by Manager";
+                    statusColor = "danger";
+                    progress = 75;
+                    break;
+                case 6: // Paid
+                    statusText = "Paid";
+                    statusColor = "success";
+                    progress = 100;
+                    break;
+            }
+
+            <div class="col-12">
+                <div class="card claim-card card-hover">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="card-title mb-1">Claim #@claim.claimId</h5>
+                                <p class="claim-date small mb-2">Submitted: @claim.submissionDate.ToString("dd MMM yyyy")</p>
+                                <p class="mb-1">
+                                    <strong>Hours:</strong> @claim.hoursWorked |
+                                    <strong>Rate:</strong> R @claim.hourlyRate |
+                                    <strong>Total:</strong> <span class="claim-amount">R @claim.totalAmount</span>
+                                </p>
+                            </div>
+                            <div class="text-end">
+                                <span class="claim-status-badge badge bg-@statusColor">@statusText</span>
+                                <div class="mt-2">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary track-status-btn"
+                                            data-claim-id="@claim.claimId"
+                                            data-status="@statusText"
+                                            data-progress="@progress"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#statusModal">
+                                        View Progress
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-info view-details-btn"
+                                            data-claim-id="@claim.claimId"
+                                            data-claim-hours="@claim.hoursWorked"
+                                            data-claim-rate="@claim.hourlyRate"
+                                            data-claim-total="@claim.totalAmount"
+                                            data-claim-notes="@claim.Notes"
+                                            data-claim-date="@claim.submissionDate.ToString("dd MMM yyyy HH:mm")"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#detailsModal">
+                                        View Details
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Inline progress bar -->
+                        <div class="progress claim-progress mb-2">
+                            <div class="progress-bar bg-@statusColor" role="progressbar" style="width: @progress%"
+                                 aria-valuenow="@progress" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>Submitted</span>
+                            <span>Coordinator</span>
+                            <span>Manager</span>
+                            <span>Payment</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<!-- Status Modal -->
+<div class="modal fade" id="statusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Claim Progress</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6 id="modalClaimId" class="mb-3">Claim #</h6>
+
+                <div class="progress claim-progress mb-4">
+                    <div class="progress-bar" id="modalProgressBar" role="progressbar" style="width: 0%"></div>
+                </div>
+
+                <div class="d-flex justify-content-between mb-3">
+                    <div class="text-center">
+                        <div class="fw-bold">1</div>
+                        <small>Submitted</small>
+                    </div>
+                    <div class="text-center">
+                        <div class="fw-bold">2</div>
+                        <small>Coordinator</small>
+                    </div>
+                    <div class="text-center">
+                        <div class="fw-bold">3</div>
+                        <small>Manager</small>
+                    </div>
+                    <div class="text-center">
+                        <div class="fw-bold">4</div>
+                        <small>Payment</small>
+                    </div>
+                </div>
+
+                <div class="alert" id="statusAlert">
+                    <strong id="statusText">Status will appear here</strong>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Claim Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6 id="detailsClaimId" class="mb-3">Claim #</h6>
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <strong>Hours Worked:</strong>
+                    </div>
+                    <div class="col-6" id="detailsHours"></div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <strong>Hourly Rate:</strong>
+                    </div>
+                    <div class="col-6" id="detailsRate"></div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <strong>Total Amount:</strong>
+                    </div>
+                    <div class="col-6" id="detailsTotal"></div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <strong>Submitted Date:</strong>
+                    </div>
+                    <div class="col-6" id="detailsDate"></div>
+                </div>
+
+                <div id="detailsNotesSection" style="display: none;">
+                    <strong>Additional Notes:</strong>
+                    <div class="mt-2 p-2 bg-light rounded" id="detailsNotes"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Status Modal
+        $('#statusModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var claimId = button.data('claim-id');
+            var status = button.data('status');
+            var progress = button.data('progress');
+
+            var modal = $(this);
+            modal.find('#modalClaimId').text('Claim #' + claimId);
+            modal.find('#statusText').text(status);
+
+            var progressBar = modal.find('#modalProgressBar');
+            progressBar.css('width', progress + '%');
+
+            if (status.includes('Rejected')) {
+                progressBar.removeClass('bg-warning bg-info bg-success').addClass('bg-danger');
+                modal.find('#statusAlert').removeClass('alert-warning alert-info alert-success').addClass('alert-danger');
+            } else if (status.includes('Coordinator')) {
+                progressBar.removeClass('bg-warning bg-danger bg-success').addClass('bg-info');
+                modal.find('#statusAlert').removeClass('alert-warning alert-danger alert-success').addClass('alert-info');
+            } else if (status.includes('Approved') || status.includes('Paid')) {
+                progressBar.removeClass('bg-warning bg-info bg-danger').addClass('bg-success');
+                modal.find('#statusAlert').removeClass('alert-warning alert-info alert-danger').addClass('alert-success');
+            } else {
+                progressBar.removeClass('bg-info bg-danger bg-success').addClass('bg-warning');
+                modal.find('#statusAlert').removeClass('alert-info alert-danger alert-success').addClass('alert-warning');
+            }
+        });
+
+        // Details Modal
+        $('#detailsModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var claimId = button.data('claim-id');
+            var hours = button.data('claim-hours');
+            var rate = button.data('claim-rate');
+            var total = button.data('claim-total');
+            var notes = button.data('claim-notes');
+            var date = button.data('claim-date');
+
+            var modal = $(this);
+            modal.find('#detailsClaimId').text('Claim #' + claimId);
+            modal.find('#detailsHours').text(hours);
+            modal.find('#detailsRate').text('R ' + rate);
+            modal.find('#detailsTotal').text('R ' + total);
+            modal.find('#detailsDate').text(date);
+
+            // Handle notes
+            var notesSection = modal.find('#detailsNotesSection');
+            var notesContent = modal.find('#detailsNotes');
+            if (notes && notes.trim() !== '') {
+                notesContent.text(notes);
+                notesSection.show();
+            } else {
+                notesSection.hide();
+            }
+        });
+    </script>
+}

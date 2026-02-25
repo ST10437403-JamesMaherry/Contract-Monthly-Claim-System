@@ -1,0 +1,178 @@
+﻿@model Contract_Monthly_Claim_System.Models.User
+
+@{
+    ViewData["Title"] = "Add New User";
+}
+
+<div class="card">
+    <div class="card-body">
+        <h4 class="card-title">Add New User</h4>
+
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show">
+                ✅ @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show">
+                ❌ @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <form asp-action="AddUser" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="row g-3">
+                <!-- Personal Information Section -->
+                <div class="col-12">
+                    <h6 class="text-primary fw-bold mb-3">👤 Personal Information</h6>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">First Name <span class="text-danger">*</span></label>
+                    <input asp-for="firstName" class="form-control" required />
+                    <span asp-validation-for="firstName" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                    <input asp-for="lastName" class="form-control" required />
+                    <span asp-validation-for="lastName" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                    <input asp-for="email" type="email" class="form-control" required placeholder="user@university.co.za" />
+                    <span asp-validation-for="email" class="text-danger"></span>
+                    <div class="form-text">This will be used as the login username</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Phone Number</label>
+                    <input asp-for="phoneNumber" class="form-control" placeholder="+27 11 123 4567" />
+                    <span asp-validation-for="phoneNumber" class="text-danger"></span>
+                </div>
+
+                <!-- Role and Compensation Section -->
+                <div class="col-12 mt-4">
+                    <h6 class="text-primary fw-bold mb-3">💼 Role & Compensation</h6>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">User Role <span class="text-danger">*</span></label>
+                    <select asp-for="userRole" class="form-select" required>
+                        <option value="">-- Select Role --</option>
+                        <option value="Lecturer">Lecturer</option>
+                        <option value="Coordinator">Programme Coordinator</option>
+                        <option value="Manager">Academic Manager</option>
+                        <option value="HR">HR Administrator</option>
+                    </select>
+                    <span asp-validation-for="userRole" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Hourly Rate (R) <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text">R</span>
+                        <input asp-for="hourlyRate" type="number" step="0.01" class="form-control" required min="50" max="1000" />
+                    </div>
+                    <span asp-validation-for="hourlyRate" class="text-danger"></span>
+                    <div class="form-text">Range: R50 - R1000 per hour</div>
+                </div>
+
+                <!-- Password Section -->
+                <div class="col-12 mt-4">
+                    <h6 class="text-primary fw-bold mb-3">🔐 Initial Password</h6>
+                    <div class="alert alert-info">
+                        <small>
+                            <strong>ℹ️ Note:</strong> Set a temporary password for the new user.
+                            They should change it after their first login.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Password <span class="text-danger">*</span></label>
+                    <input type="password" name="password" class="form-control" required minlength="6" id="password" />
+                    <div class="form-text">Minimum 6 characters</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                    <input type="password" name="confirmPassword" class="form-control" required minlength="6" id="confirmPassword" />
+                    <div id="passwordMatchError" class="text-danger small mt-1" style="display: none;">
+                        Passwords do not match
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="showPasswords">
+                        <label class="form-check-label" for="showPasswords">
+                            Show passwords
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="@Url.Action("HRDashboard", "HR")" class="btn btn-outline-secondary">
+                    ← Back to Users
+                </a>
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                    ➕ Add User
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Show/Hide passwords
+            $('#showPasswords').on('change', function () {
+                const type = this.checked ? 'text' : 'password';
+                $('#password, #confirmPassword').attr('type', type);
+            });
+
+            // Password match validation
+            function validatePasswords() {
+                const password = $('#password').val();
+                const confirmPassword = $('#confirmPassword').val();
+                const errorDiv = $('#passwordMatchError');
+                const submitBtn = $('#submitBtn');
+
+                if (confirmPassword.length > 0) {
+                    if (password !== confirmPassword) {
+                        errorDiv.show();
+                        submitBtn.prop('disabled', true);
+                        return false;
+                    } else {
+                        errorDiv.hide();
+                        submitBtn.prop('disabled', false);
+                        return true;
+                    }
+                }
+                submitBtn.prop('disabled', false);
+                return true;
+            }
+
+            $('#password, #confirmPassword').on('input', validatePasswords);
+
+            // Form validation on submit
+            $('form').on('submit', function (e) {
+                if (!validatePasswords()) {
+                    e.preventDefault();
+                    alert('Please ensure passwords match before submitting.');
+                    return false;
+                }
+            });
+        });
+    </script>
+}

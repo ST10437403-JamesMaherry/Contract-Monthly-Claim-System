@@ -1,0 +1,128 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Access Denied - CMCS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+            body {
+                background-color: #ffffff;
+                color: #000000;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            }
+
+            .access-denied-card {
+                border: 1px solid #000000;
+                border-radius: 8px;
+                overflow: hidden;
+                background: #ffffff;
+            }
+
+            .access-denied-header {
+                background: #000000;
+                color: #ffffff;
+                padding: 1.5rem 1rem;
+                text-align: center;
+            }
+
+            .access-denied-icon {
+                font-size: 4rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .card-body {
+                padding: 2rem;
+                text-align: center;
+            }
+
+            .btn {
+                border: 1px solid #000000;
+                color: #000000;
+                background: #ffffff;
+                padding: 0.75rem 1rem;
+                font-weight: bold;
+                text-decoration: none;
+                display: block;
+                width: 100%;
+                margin-bottom: 0.75rem;
+            }
+
+                .btn:hover {
+                    background: #000000;
+                    color: #ffffff;
+                }
+
+            .btn-outline-secondary {
+                background: transparent;
+            }
+
+            .text-muted {
+                color: #000000 !important;
+            }
+
+            .text-primary {
+                color: #000000 !important;
+                font-weight: bold;
+            }
+
+            hr,
+            .border-top {
+                border-top: 1px solid #000000;
+            }
+
+            small {
+                color: #000000;
+            }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="access-denied-card">
+                    <div class="access-denied-header">
+                        <div class="access-denied-icon">🚫</div>
+                        <h2 class="h3 mb-0">Access Denied</h2>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-4">
+                            You don't have permission to access this page.
+                            @if (!string.IsNullOrEmpty(ViewBag.UserRole))
+                            {
+                                <br />
+                                <span class="mt-2 d-inline-block">
+                                    Your role: <strong class="text-primary">@ViewBag.UserRole</strong>
+                                </span>
+                            }
+                        </p>
+
+                        <div class="d-grid gap-2">
+                            <a href="@Url.Action("Logout", "Auth")" class="btn btn-lg">
+                                🔐 Back to Login
+                            </a>
+                            <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                                ← Go Back
+                            </a>
+                        </div>
+
+                        <div class="mt-4 pt-3 border-top">
+                            <small>
+                                If you believe this is an error, please contact your system administrator.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <small>© @DateTime.Now.Year CMCS - Claim Management System</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,49 @@
+﻿@model dynamic
+
+<h5>Claims</h5>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Claim ID</th>
+            <th>Date</th>
+            <th>Hours</th>
+            <th>Rate (R)</th>
+            <th>Total (R)</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var claim in Model)
+        {
+            <tr>
+                <td>@claim.claimId</td>
+                <td>@claim.submissionDate.ToString("yyyy-MM-dd")</td>
+                <td>@claim.hoursWorked</td>
+                <td>@claim.hourlyRate</td>
+                <td>@claim.totalAmount</td>
+                <td>
+                    @if (claim.statusId == 1)
+                    {
+                        <span class="badge bg-warning">Pending</span>
+                    }
+                    else if (claim.statusId == 2)
+                    {
+                        <span class="badge bg-info">Approved by Coordinator</span>
+                    }
+                    else if (claim.statusId == 3)
+                    {
+                        <span class="badge bg-success">Approved by Manager</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Unknown</span>
+                    }
+                </td>
+                <td>
+                    <a href="/Lecturer/ClaimStatus?claimId=@claim.claimId" class="btn btn-sm btn-outline-primary">Track</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

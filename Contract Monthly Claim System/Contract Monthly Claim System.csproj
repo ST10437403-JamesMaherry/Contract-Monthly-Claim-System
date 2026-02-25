@@ -7,4 +7,11 @@
     <RootNamespace>Contract_Monthly_Claim_System</RootNamespace>
   </PropertyGroup>
 
+	<ItemGroup>
+		<PackageReference Include="QuestPDF" Version="2025.7.4" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.0" />
+	</ItemGroup>
+
 </Project>

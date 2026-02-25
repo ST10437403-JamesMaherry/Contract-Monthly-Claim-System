@@ -1,32 +1,23 @@
-using Contract_Monthly_Claim_System.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
 
 namespace Contract_Monthly_Claim_System.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-
-        public HomeController(ILogger<HomeController> logger)
-        {
-            _logger = logger;
-        }
-
         public IActionResult Index()
         {
-            return View();
-        }
+            // Get the user's role from session
+            var userRole = HttpContext.Session.GetString("UserRole");
 
-        public IActionResult Privacy()
-        {
-            return View();
-        }
-
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            // Redirect to appropriate dashboard based on role
+            return userRole switch
+            {
+                "Lecturer" => RedirectToAction("Dashboard", "Lecturer"),
+                "Coordinator" => RedirectToAction("ReviewClaims", "Coordinator"),
+                "Manager" => RedirectToAction("ApproveClaims", "Manager"),
+                "HR" => RedirectToAction("ManageUsers", "HR"),
+                _ => RedirectToAction("Login", "Auth") // If no role, redirect to login
+            };
         }
     }
 }

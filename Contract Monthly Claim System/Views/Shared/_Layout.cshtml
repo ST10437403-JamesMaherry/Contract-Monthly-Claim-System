@@ -3,47 +3,224 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Contract_Monthly_Claim_System</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Contract_Monthly_Claim_System.styles.css" asp-append-version="true" />
+    <title>@ViewData["Title"] - CMCS</title>
+
+    <!-- Load Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Load custom site styles -->
+    <link href="/css/site.css" rel="stylesheet" />
+
+    <!-- Load jQuery for client-side logic -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+    <!-- Top navigation bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-top fixed-top">
+        <div class="container-fluid">
+            <button class="btn btn-outline-light me-2 sidebar-toggle" type="button" aria-label="Toggle sidebar">
+                ☰
+            </button>
+
+            <a class="navbar-brand fw-bold" href="@Url.Action("Index", "Home")">
+                Contract Monthly Claim System
+            </a>
+
+            <!-- Mobile menu toggle -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav ms-auto d-flex align-items-center">
+                    <!-- Show role-specific navigation links -->
+                    @if (ViewBag.UserRole == "Lecturer")
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="@Url.Action("Dashboard", "Lecturer")">📊 Dashboard & Claims</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="@Url.Action("SubmitClaim", "Lecturer")">➕ Submit Claim</a>
+                        </li>
+                    }
+                    else if (ViewBag.UserRole == "Coordinator")
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="@Url.Action("ReviewClaims", "Coordinator")">📋 Review Claims</a>
+                        </li>
+                    }
+                    else if (ViewBag.UserRole == "Manager")
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="@Url.Action("ApproveClaims", "Manager")">✅ Approve Claims</a>
+                        </li>
+                    }
+                    else if (ViewBag.UserRole == "HR")
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="@Url.Action("ManageUsers", "HR")">👥 Manage Users</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="@Url.Action("Reports", "HR")">📊 Reports</a>
+                        </li>
+                    }
+
+                    <!-- Display logout link -->
+                    <li class="nav-item d-flex align-items-center ms-3 ms-lg-4">
+                        <span class="text-white me-2">👤 @(Context.Session.GetString("UserName") ?? "User")</span>
+                        <a class="nav-link text-white p-0" href="@Url.Action("Logout", "Auth")">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main layout with sidebar and content -->
+    <div class="d-flex">
+        <!-- Sidebar with role-based navigation and stats -->
+        <div class="sidebar" id="sidebar">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="mb-0 fw-bold text-primary">Navigation</h5>
+            </div>
+
+            @if (ViewBag.UserRole == "Lecturer")
+            {
+                <h6 class="text-primary fw-bold mb-3">📚 Lecturer Panel</h6>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Action("Dashboard", "Lecturer")">📊 Dashboard & My Claims</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Action("SubmitClaim", "Lecturer")">➕ Submit New Claim</a>
+                    </li>
+                </ul>
+
+                <div class="sidebar-stats mt-4">
+                    <h6 class="fw-bold mb-3">📈 Quick Stats</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <small>Total Claims:</small>
+                        <span class="badge bg-primary">@(ViewBag.TotalClaims ?? 0)</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <small>Approved:</small>
+                        <span class="badge bg-success">@(ViewBag.ApprovedClaims ?? 0)</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <small>Pending:</small>
+                        <span class="badge bg-warning">@(ViewBag.PendingClaims ?? 0)</span>
+                    </div>
+                </div>
+            }
+            else if (ViewBag.UserRole == "Coordinator")
+            {
+                <h6 class="text-success fw-bold mb-3">👨‍💼 Coordinator Panel</h6>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Action("ReviewClaims", "Coordinator")">📋 Review Claims</a>
+                    </li>
+                </ul>
+
+                <div class="sidebar-stats mt-4">
+                    <h6 class="fw-bold mb-3">📊 Review Stats</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <small>Pending Review:</small>
+                        <span class="badge bg-warning">@(ViewBag.PendingClaims ?? 0)</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <small>Approved Today:</small>
+                        <span class="badge bg-success">@(ViewBag.ApprovedToday ?? 0)</span>
+                    </div>
+                </div>
+            }
+            else if (ViewBag.UserRole == "Manager")
+            {
+                <h6 class="text-info fw-bold mb-3">👨‍💼 Manager Panel</h6>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Action("ApproveClaims", "Manager")">✅ Final Approvals</a>
+                    </li>
+                </ul>
+
+                <div class="sidebar-stats mt-4">
+                    <h6 class="fw-bold mb-3">📈 Approval Stats</h6>
+                    <div class="d-flex justify-content-between">
+                        <small>Pending Approval:</small>
+                        <span class="badge bg-warning">@(ViewBag.PendingClaims ?? 0)</span>
+                    </div>
+                </div>
+            }
+            else if (ViewBag.UserRole == "HR")
+            {
+                <h6 class="text-danger fw-bold mb-3">👨‍💼 HR Panel</h6>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Action("ManageUsers", "HR")">👥 Manage Users</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="@Url.Action("Reports", "HR")">📊 Generate Reports</a>
+                    </li>
+                </ul>
+
+                <div class="sidebar-stats mt-4">
+                    <h6 class="fw-bold mb-3">📈 HR Stats</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <small>Total Users:</small>
+                        <span class="badge bg-primary">@(ViewBag.TotalUsers ?? 0)</span>
+                    </div>
+                </div>
+            }
+
+            <hr class="my-4" />
+            <small class="text-muted">CMCS v3.0 • Prototype</small>
+        </div>
+
+        <!-- Main page content area -->
+        <div class="main-content flex-grow-1">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Contract_Monthly_Claim_System</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+                <!-- Page title with optional help button -->
+                @if (!string.IsNullOrEmpty(ViewData["Title"]?.ToString()))
+                {
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="fw-bold">@ViewData["Title"]</h2>
+                        @if (ViewBag.UserRole == "Lecturer" && ViewData["Title"]?.ToString() == "Submit Claim")
+                        {
+                            <button class="btn btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#helpSection">
+                                ℹ️ Help
+                            </button>
+                        }
+                    </div>
+                    <hr />
+                }
+
+                <!-- Context-sensitive help section -->
+                @if (ViewBag.UserRole == "Lecturer" && ViewData["Title"]?.ToString() == "Submit Claim")
+                {
+                    <div class="collapse mb-4" id="helpSection">
+                        <div class="alert alert-info">
+                            <h5>💡 Claim Submission Guidelines</h5>
+                            <ul class="mb-0">
+                                <li>Your hourly rate is automatically pre-filled based on your contract</li>
+                                <li>Supported file formats: PDF, DOCX, XLSX (Max: 10MB per file)</li>
+                                <li>Ensure all supporting documents are clearly labeled</li>
+                                <li>Claims are processed within 3-5 business days</li>
+                            </ul>
+                        </div>
+                    </div>
+                }
+
+                <!-- Render the view content -->
+                <div class="fade-in">
+                    @RenderBody()
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+        </div>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - Contract_Monthly_Claim_System - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <!-- Load Bootstrap JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/site.js"></script>
+
+    <!-- Render additional scripts from child views -->
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
