@@ -68,7 +68,10 @@
                     <!-- Display logout link -->
                     <li class="nav-item d-flex align-items-center ms-3 ms-lg-4">
                         <span class="text-white me-2">👤 @(Context.Session.GetString("UserName") ?? "User")</span>
-                        <a class="nav-link text-white p-0" href="@Url.Action("Logout", "Auth")">Logout</a>
+                        <form asp-controller="Auth" asp-action="Logout" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="nav-link text-white p-0 border-0 bg-transparent">Logout</button>
+                        </form>
                     </li>
                 </ul>
             </div>

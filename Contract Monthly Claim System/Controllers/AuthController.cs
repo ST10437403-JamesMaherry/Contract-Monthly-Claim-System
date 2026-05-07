@@ -38,6 +38,9 @@ namespace Contract_Monthly_Claim_System.Controllers
                 return View();
             }
 
+            // Start each successful login with a clean session.
+            HttpContext.Session.Clear();
+
             // Set session variables
             HttpContext.Session.SetInt32("UserId", user.userId);
             HttpContext.Session.SetString("UserRole", user.userRole);
@@ -49,6 +52,8 @@ namespace Contract_Monthly_Claim_System.Controllers
         }
 
         // Logout
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();

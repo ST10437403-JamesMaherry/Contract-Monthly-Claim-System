@@ -92,6 +92,7 @@ else
                                 }
 
                                 <form method="post" action="@Url.Action("ApproveClaim", "Coordinator")" class="mt-3">
+                                    @Html.AntiForgeryToken()
                                     <input type="hidden" name="claimId" value="@claim.claimId" />
                                     <div class="mb-3">
                                         <label class="form-label">Coordinator Comments</label>

@@ -1,7 +1,8 @@
 using Contract_Monthly_Claim_System.Data;
 using Contract_Monthly_Claim_System.Services;
-using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc;
 using QuestPDF.Infrastructure;
 
 namespace Contract_Monthly_Claim_System
@@ -14,10 +15,30 @@ namespace Contract_Monthly_Claim_System
             QuestPDF.Settings.License = LicenseType.Community;
 
             // Add services to the container.
-            builder.Services.AddControllersWithViews();
+            builder.Services.AddControllersWithViews(options =>
+            {
+                options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+            });
             builder.Services.AddScoped<IDataService, SqlDataService>();
             builder.Services.AddScoped<IPdfService, PdfService>();
             builder.Services.AddScoped<Services.IAuthenticationService, Services.AuthenticationService>();
+
+            // Anti-forgery tokens protect all unsafe HTTP requests.
+            builder.Services.AddAntiforgery(options =>
+            {
+                options.Cookie.Name = ".CMCS.AntiForgery";
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.SameSite = SameSiteMode.Strict;
+            });
+
+            // Apply secure defaults to application cookies.
+            builder.Services.Configure<CookiePolicyOptions>(options =>
+            {
+                options.HttpOnly = HttpOnlyPolicy.Always;
+                options.Secure = CookieSecurePolicy.Always;
+                options.MinimumSameSitePolicy = SameSiteMode.Strict;
+            });
 
             // Add Entity Framework with SQLite 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -26,9 +47,12 @@ namespace Contract_Monthly_Claim_System
             // Session support
             builder.Services.AddSession(options =>
             {
-                options.IdleTimeout = TimeSpan.FromHours(2); // Session timeout
+                options.IdleTimeout = TimeSpan.FromHours(1); // Session timeout
+                options.Cookie.Name = ".CMCS.Session";
                 options.Cookie.HttpOnly = true; // Security: prevent JavaScript access
                 options.Cookie.IsEssential = true;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.SameSite = SameSiteMode.Strict;
             });
 
             var app = builder.Build();
@@ -49,6 +73,7 @@ namespace Contract_Monthly_Claim_System
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseRouting();
+            app.UseCookiePolicy();
 
             // Enable session middleware BEFORE authorization
             app.UseSession();

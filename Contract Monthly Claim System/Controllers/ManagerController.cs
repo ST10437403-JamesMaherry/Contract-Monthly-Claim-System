@@ -59,6 +59,7 @@ namespace Contract_Monthly_Claim_System.Controllers
 
         // Grants final approval to a claim 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> FinalApprove(int claimId)
         {
             var claims = await _dataService.GetClaimsAsync();
@@ -76,6 +77,7 @@ namespace Contract_Monthly_Claim_System.Controllers
 
         // Rejects a claim at the manager level
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> RejectClaim(int claimId)
         {
             var claims = await _dataService.GetClaimsAsync();
@@ -97,6 +99,7 @@ namespace Contract_Monthly_Claim_System.Controllers
 
         // Marks an approved claim as paid 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkAsPaid(int claimId)
         {
             var claims = await _dataService.GetClaimsAsync();

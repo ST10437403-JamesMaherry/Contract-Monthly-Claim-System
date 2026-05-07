@@ -46,6 +46,7 @@ namespace Contract_Monthly_Claim_System.Controllers
 
         // Approves a claim and updates its status to "Approved by Coordinator"
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveClaim(int claimId, string comments)
         {
             var claims = await _dataService.GetClaimsAsync();
@@ -63,6 +64,7 @@ namespace Contract_Monthly_Claim_System.Controllers
 
         // Rejects a claim and updates its status to "Rejected by Coordinator"
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> RejectClaim(int claimId, string comments)
         {
             var claims = await _dataService.GetClaimsAsync();
