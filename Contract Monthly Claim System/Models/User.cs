@@ -16,7 +16,8 @@ namespace Contract_Monthly_Claim_System.Models
         public string passwordHash { get; set; }
         public string passwordSalt { get; set; }
 
-        // Navigation property
+        // Navigation properties
         public virtual ICollection<Claim> Claims { get; set; } = new List<Claim>();
+        public virtual ICollection<ClaimReview> ClaimReviews { get; set; } = new List<ClaimReview>();
     }
 }
