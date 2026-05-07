@@ -1,8 +1,9 @@
-﻿using Contract_Monthly_Claim_System.Data;
+using Contract_Monthly_Claim_System.Data;
 using Contract_Monthly_Claim_System.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.EntityFrameworkCore;
 
 namespace Contract_Monthly_Claim_System.Services
 {
@@ -10,61 +11,58 @@ namespace Contract_Monthly_Claim_System.Services
     {
         string HashPassword(string password, out string salt);
         bool VerifyPassword(string password, string hash, string salt);
-        Task<User> ValidateUserAsync(string email, string password);
+        Task<User?> ValidateUserAsync(string email, string password);
         Task<bool> SetUserPasswordAsync(int userId, string password);
     }
 
     public class AuthenticationService : IAuthenticationService
     {
         private readonly ApplicationDbContext _context;
+        private readonly PasswordHasher<User> _passwordHasher;
 
         public AuthenticationService(ApplicationDbContext context)
         {
             _context = context;
+            _passwordHasher = new PasswordHasher<User>();
         }
 
-        // Hash password with unique salt
+        // Hashes new passwords using ASP.NET Core Identity's PBKDF2-based password hasher.
         public string HashPassword(string password, out string salt)
         {
-            // Generate random salt
-            byte[] saltBytes = new byte[32];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(saltBytes);
-            }
-            salt = Convert.ToBase64String(saltBytes);
-
-            // Hash password with salt
-            using (var sha256 = SHA256.Create())
-            {
-                byte[] passwordBytes = Encoding.UTF8.GetBytes(password + salt);
-                byte[] hashBytes = sha256.ComputeHash(passwordBytes);
-                return Convert.ToBase64String(hashBytes);
-            }
+            salt = string.Empty; // Identity stores the salt inside the password hash.
+            return _passwordHasher.HashPassword(new User(), password);
         }
 
-        // Verify password against stored hash
+        // Verifies both new Identity hashes and existing seeded SHA256 hashes.
         public bool VerifyPassword(string password, string hash, string salt)
         {
-            using (var sha256 = SHA256.Create())
+            if (VerifyIdentityPassword(new User(), password, hash) != PasswordVerificationResult.Failed)
             {
-                byte[] passwordBytes = Encoding.UTF8.GetBytes(password + salt);
-                byte[] hashBytes = sha256.ComputeHash(passwordBytes);
-                string computedHash = Convert.ToBase64String(hashBytes);
-                return computedHash == hash;
+                return true;
             }
+
+            return VerifyLegacyPassword(password, hash, salt);
         }
 
         // Validate user credentials
-        public async Task<User> ValidateUserAsync(string email, string password)
+        public async Task<User?> ValidateUserAsync(string email, string password)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.email == email);
+            var normalizedEmail = email.Trim().ToLower();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.email.ToLower() == normalizedEmail);
 
             if (user == null || string.IsNullOrEmpty(user.passwordHash))
                 return null;
 
-            if (VerifyPassword(password, user.passwordHash, user.passwordSalt))
+            var result = VerifyIdentityPassword(user, password, user.passwordHash);
+
+            if (result == PasswordVerificationResult.Success)
                 return user;
+
+            if (result == PasswordVerificationResult.SuccessRehashNeeded || VerifyLegacyPassword(password, user.passwordHash, user.passwordSalt))
+            {
+                await UpgradePasswordHashAsync(user, password);
+                return user;
+            }
 
             return null;
         }
@@ -75,11 +73,46 @@ namespace Contract_Monthly_Claim_System.Services
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return false;
 
-            user.passwordHash = HashPassword(password, out string salt);
-            user.passwordSalt = salt;
+            user.passwordHash = _passwordHasher.HashPassword(user, password);
+            user.passwordSalt = string.Empty;
 
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        private PasswordVerificationResult VerifyIdentityPassword(User user, string password, string hash)
+        {
+            try
+            {
+                return _passwordHasher.VerifyHashedPassword(user, hash, password);
+            }
+            catch (FormatException)
+            {
+                return PasswordVerificationResult.Failed;
+            }
+        }
+
+        private bool VerifyLegacyPassword(string password, string hash, string salt)
+        {
+            if (string.IsNullOrEmpty(hash) || string.IsNullOrEmpty(salt))
+                return false;
+
+            using (var sha256 = SHA256.Create())
+            {
+                byte[] passwordBytes = Encoding.UTF8.GetBytes(password + salt);
+                byte[] hashBytes = sha256.ComputeHash(passwordBytes);
+                string computedHash = Convert.ToBase64String(hashBytes);
+                return CryptographicOperations.FixedTimeEquals(
+                    Encoding.UTF8.GetBytes(computedHash),
+                    Encoding.UTF8.GetBytes(hash));
+            }
+        }
+
+        private async Task UpgradePasswordHashAsync(User user, string password)
+        {
+            user.passwordHash = _passwordHasher.HashPassword(user, password);
+            user.passwordSalt = string.Empty;
+            await _context.SaveChangesAsync();
         }
     }
 }

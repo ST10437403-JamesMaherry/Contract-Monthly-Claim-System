@@ -1,7 +1,5 @@
 ﻿using Contract_Monthly_Claim_System.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Contract_Monthly_Claim_System.Data
 {
@@ -130,12 +128,13 @@ namespace Contract_Monthly_Claim_System.Data
                 new ClaimStatus { statusId = 6, statusName = "Paid" }
             );
 
-            // Create password hashes for seeded users
-            var mattPassword = CreatePassword("password123");
-            var victoriaPassword = CreatePassword("password123");
-            var sarahPassword = CreatePassword("password123");
-            var davidPassword = CreatePassword("password123");
-            var hrPassword = CreatePassword("admin123");
+            // Existing demo hashes are kept stable so migrations do not change between builds.
+            // Successful logins are upgraded to the current password hashing format.
+            var mattPassword = ("U035CuWx4TAQr1bQABL5SBFf+/E/MdO5GHdS5+KFixo=", "hhyaO083w0ZOYl55AuCG6jBRlblbvQ0FkyYJrrd4/UM=");
+            var victoriaPassword = ("eeIyLs4GRBSyrsiCs2eyLL0wu1PGBo5NLxFD5uctAGw=", "FwLcBNqyRwyo3HwgYLfsx/vWhQTKGz7fLBFPOZJEy3A=");
+            var sarahPassword = ("DP5tg9KEDgPKsmtBD/+0BlazsXNLxPdAwy0lbREzo+4=", "QXk1gJdTSHSwRihIMCTs9QZ/cHBX0aIIHGmmuDQKnCY=");
+            var davidPassword = ("0mgrLlw+wB23c/ol/jHPBCNtNBljsLeZcG8Di0u6WnY=", "lrQmJEDmwIAtsXwatTZyVNiOm9/ifk9mpEh20UGgxPE=");
+            var hrPassword = ("NWbrGUAGNAw7bpYGgmO7vvznpvo5zNRXjubj5AHNNCQ=", "Ui+5ik/IJcVUCX8VbUJ8vFDZBblifaW3gIq8FWQxKD0=");
 
             // Seed users with password hashes
             modelBuilder.Entity<User>().HasData(
@@ -148,8 +147,8 @@ namespace Contract_Monthly_Claim_System.Data
                     phoneNumber = "+27 11 123 4567",
                     userRole = "Lecturer",
                     hourlyRate = 150.00m,
-                    passwordHash = mattPassword.hash,
-                    passwordSalt = mattPassword.salt
+                    passwordHash = mattPassword.Item1,
+                    passwordSalt = mattPassword.Item2
                 },
                 new User
                 {
@@ -160,8 +159,8 @@ namespace Contract_Monthly_Claim_System.Data
                     phoneNumber = "+27 11 123 4568",
                     userRole = "Lecturer",
                     hourlyRate = 175.00m,
-                    passwordHash = victoriaPassword.hash,
-                    passwordSalt = victoriaPassword.salt
+                    passwordHash = victoriaPassword.Item1,
+                    passwordSalt = victoriaPassword.Item2
                 },
                 new User
                 {
@@ -172,8 +171,8 @@ namespace Contract_Monthly_Claim_System.Data
                     phoneNumber = "+27 11 123 4569",
                     userRole = "Coordinator",
                     hourlyRate = 200.00m,
-                    passwordHash = sarahPassword.hash,
-                    passwordSalt = sarahPassword.salt
+                    passwordHash = sarahPassword.Item1,
+                    passwordSalt = sarahPassword.Item2
                 },
                 new User
                 {
@@ -184,8 +183,8 @@ namespace Contract_Monthly_Claim_System.Data
                     phoneNumber = "+27 11 123 4570",
                     userRole = "Manager",
                     hourlyRate = 250.00m,
-                    passwordHash = davidPassword.hash,
-                    passwordSalt = davidPassword.salt
+                    passwordHash = davidPassword.Item1,
+                    passwordSalt = davidPassword.Item2
                 },
                 new User
                 {
@@ -196,8 +195,8 @@ namespace Contract_Monthly_Claim_System.Data
                     phoneNumber = "+27 11 123 4571",
                     userRole = "HR",
                     hourlyRate = 0.00m,
-                    passwordHash = hrPassword.hash,
-                    passwordSalt = hrPassword.salt
+                    passwordHash = hrPassword.Item1,
+                    passwordSalt = hrPassword.Item2
                 }
             );
 
@@ -250,24 +249,6 @@ namespace Contract_Monthly_Claim_System.Data
                     Notes = "Exam preparation"
                 }
             );
-        }
-
-        // Helper method to create password hashes
-        private (string hash, string salt) CreatePassword(string password)
-        {
-            byte[] saltBytes = new byte[32];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(saltBytes);
-            }
-            string salt = Convert.ToBase64String(saltBytes);
-
-            using (var sha256 = SHA256.Create())
-            {
-                byte[] passwordBytes = Encoding.UTF8.GetBytes(password + salt);
-                byte[] hashBytes = sha256.ComputeHash(passwordBytes);
-                return (Convert.ToBase64String(hashBytes), salt);
-            }
         }
     }
 }
