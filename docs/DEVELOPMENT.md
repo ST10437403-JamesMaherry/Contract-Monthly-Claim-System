@@ -44,6 +44,14 @@ The following files are local development artifacts and should not be committed:
 
 The repository keeps migrations in source control so the database can be recreated from code.
 
+## Document Storage
+
+Uploaded documents are stored under `App_Data/Uploads` and encrypted with AES-GCM before they are written to disk.
+
+The encryption key is read from `DocumentStorage:EncryptionKey`. Development has a local key in `appsettings.Development.json`; production environments should override it with a secret value from environment configuration or a secret store.
+
+The key may be a base64 value or plain text, but it must decode to 16, 24, or 32 bytes for AES.
+
 ## Quality Checks
 
 Before opening a pull request or merging a branch, run:

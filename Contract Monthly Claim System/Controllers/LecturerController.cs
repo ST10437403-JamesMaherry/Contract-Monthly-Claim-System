@@ -9,10 +9,17 @@ namespace Contract_Monthly_Claim_System.Controllers
     public class LecturerController : Controller
     {
         private readonly IDataService _dataService;
+        private readonly IDocumentStorageService _documentStorageService;
+        private readonly IDocumentAccessService _documentAccessService;
 
-        public LecturerController(IDataService dataService)
+        public LecturerController(
+            IDataService dataService,
+            IDocumentStorageService documentStorageService,
+            IDocumentAccessService documentAccessService)
         {
             _dataService = dataService;
+            _documentStorageService = documentStorageService;
+            _documentAccessService = documentAccessService;
         }
 
         #region Dashboard & Overview
@@ -88,6 +95,8 @@ namespace Contract_Monthly_Claim_System.Controllers
             // Pass current user info to the view
             ViewBag.CurrentUser = currentUser;
             ViewBag.CurrentUserId = currentUserId;
+            ViewBag.MaxDocuments = _documentStorageService.MaxFilesPerClaim;
+            ViewBag.MaxUploadSizeMB = _documentStorageService.MaxFileSizeBytes / 1024 / 1024;
 
             // Create a claim with the user ID pre-set
             var claim = new Claim { userId = currentUserId.Value };
@@ -118,9 +127,31 @@ namespace Contract_Monthly_Claim_System.Controllers
             ModelState.Remove("User");
             ModelState.Remove("Status");
             ModelState.Remove("Documents");
+            ModelState.Remove("ClaimReviews");
 
             // Force the claim to use the logged-in user's ID
             claim.userId = currentUserId.Value;
+
+            var preparedDocuments = new List<DocumentUploadResult>();
+            var uploadedDocuments = documents?.Where(d => d.Length > 0).ToList() ?? new List<IFormFile>();
+
+            if (uploadedDocuments.Count > _documentStorageService.MaxFilesPerClaim)
+            {
+                ModelState.AddModelError("", $"You can upload a maximum of {_documentStorageService.MaxFilesPerClaim} supporting documents.");
+            }
+
+            foreach (var file in uploadedDocuments)
+            {
+                var uploadResult = await _documentStorageService.PrepareUploadAsync(file);
+                if (uploadResult.Success)
+                {
+                    preparedDocuments.Add(uploadResult);
+                }
+                else
+                {
+                    ModelState.AddModelError("", uploadResult.ErrorMessage ?? $"'{file.FileName}' could not be uploaded.");
+                }
+            }
 
             if (ModelState.IsValid)
             {
@@ -157,49 +188,27 @@ namespace Contract_Monthly_Claim_System.Controllers
                         throw new Exception("Failed to generate claim ID.");
                     }
 
-                    // Process uploaded documents
-                    if (documents != null && documents.Any(d => d.Length > 0))
+                    // Process validated supporting documents
+                    foreach (var preparedDocument in preparedDocuments)
                     {
-                        foreach (var file in documents.Where(d => d.Length > 0))
+                        var document = new Document
                         {
-                            if (file.Length <= 10 * 1024 * 1024)
-                            {
-                                var allowedExtensions = new[] { ".pdf", ".docx", ".xlsx" };
-                                var fileExtension = Path.GetExtension(file.FileName).ToLower();
+                            claimId = claim.claimId,
+                            fileName = preparedDocument.FileName,
+                            uploadDate = DateTime.Now,
+                            fileType = preparedDocument.FileExtension,
+                            fileSize = preparedDocument.FileSize,
+                            Claim = default!
+                        };
 
-                                if (allowedExtensions.Contains(fileExtension))
-                                {
-                                    var document = new Document
-                                    {
-                                        claimId = claim.claimId,
-                                        fileName = file.FileName,
-                                        uploadDate = DateTime.Now,
-                                        fileType = fileExtension,
-                                        fileSize = file.Length,
-                                        Claim = default!
-                                    };
+                        await _dataService.AddDocumentAsync(document);
 
-                                    await _dataService.AddDocumentAsync(document);
-
-                                    if (document.documentId == 0)
-                                    {
-                                        throw new Exception($"Failed to save document: {file.FileName}");
-                                    }
-
-                                    using var memoryStream = new MemoryStream();
-                                    await file.CopyToAsync(memoryStream);
-                                    await _dataService.SaveDocumentFileAsync(document.documentId, memoryStream.ToArray());
-                                }
-                                else
-                                {
-                                    TempData["Warning"] = $"File '{file.FileName}' was skipped (invalid format).";
-                                }
-                            }
-                            else
-                            {
-                                TempData["Warning"] = $"File '{file.FileName}' was skipped (too large).";
-                            }
+                        if (document.documentId == 0)
+                        {
+                            throw new Exception($"Failed to save document: {preparedDocument.FileName}");
                         }
+
+                        await _documentStorageService.SaveDocumentFileAsync(document.documentId, preparedDocument.FileData);
                     }
 
                     TempData["Success"] = $"Claim submitted successfully! Your hourly rate of R {userHourlyRate:F2} was applied.";
@@ -229,6 +238,8 @@ namespace Contract_Monthly_Claim_System.Controllers
             var allUsers2 = await _dataService.GetUsersAsync();
             var currentUser = allUsers2.FirstOrDefault(u => u.userId == currentUserId);
             ViewBag.CurrentUser = currentUser;
+            ViewBag.MaxDocuments = _documentStorageService.MaxFilesPerClaim;
+            ViewBag.MaxUploadSizeMB = _documentStorageService.MaxFileSizeBytes / 1024 / 1024;
 
             return View(claim);
         }
@@ -239,13 +250,16 @@ namespace Contract_Monthly_Claim_System.Controllers
 
         public async Task<IActionResult> DownloadDocument(int documentId)
         {
-            var document = (await _dataService.GetDocumentsAsync()).FirstOrDefault(d => d.documentId == documentId);
-            if (document == null) return NotFound();
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            var currentUserRole = HttpContext.Session.GetString("UserRole");
+            if (currentUserId == null || string.IsNullOrEmpty(currentUserRole))
+                return RedirectToAction("Login", "Auth");
 
-            var fileData = await _dataService.GetDocumentFileAsync(documentId);
-            if (fileData == null) return NotFound();
+            var download = await _documentAccessService.GetAuthorizedDownloadAsync(documentId, currentUserId.Value, currentUserRole);
+            if (!download.Found) return NotFound();
+            if (!download.Authorized) return RedirectToAction("AccessDenied", "Auth");
 
-            return File(fileData, "application/octet-stream", document.fileName);
+            return File(download.FileData!, download.ContentType, download.FileName);
         }
 
         #endregion

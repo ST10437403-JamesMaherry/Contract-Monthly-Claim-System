@@ -19,8 +19,12 @@ namespace Contract_Monthly_Claim_System
             {
                 options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
             });
+            builder.Services.Configure<DocumentStorageOptions>(
+                builder.Configuration.GetSection("DocumentStorage"));
             builder.Services.AddScoped<IDataService, SqlDataService>();
             builder.Services.AddScoped<IClaimWorkflowService, ClaimWorkflowService>();
+            builder.Services.AddScoped<IDocumentStorageService, DocumentStorageService>();
+            builder.Services.AddScoped<IDocumentAccessService, DocumentAccessService>();
             builder.Services.AddScoped<IPdfService, PdfService>();
             builder.Services.AddScoped<Services.IAuthenticationService, Services.AuthenticationService>();
 

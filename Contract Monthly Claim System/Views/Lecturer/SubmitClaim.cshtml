@@ -1,6 +1,8 @@
 ﻿@model Contract_Monthly_Claim_System.Models.Claim
 @{
     var currentUser = ViewBag.CurrentUser as Contract_Monthly_Claim_System.Models.User;
+    var maxDocuments = ViewBag.MaxDocuments ?? 5;
+    var maxUploadSizeMB = ViewBag.MaxUploadSizeMB ?? 10;
 }
 
 <div class="card card-action">
@@ -83,7 +85,8 @@
                     <input type="file" name="documents" class="form-control" accept=".pdf,.docx,.xlsx" multiple id="fileUpload" />
                     <div class="form-text">
                         <strong>Accepted formats:</strong> PDF, DOCX, XLSX<br />
-                        <strong>Maximum file size:</strong> 10MB per file
+                        <strong>Maximum file size:</strong> @maxUploadSizeMB MB per file<br />
+                        <strong>Maximum documents:</strong> @maxDocuments per claim
                     </div>
                     <div id="fileList" class="mt-2"></div>
                     <div id="fileError" class="text-danger small mt-1" style="display: none;"></div>
