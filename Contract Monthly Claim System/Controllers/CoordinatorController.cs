@@ -9,12 +9,17 @@ namespace Contract_Monthly_Claim_System.Controllers
     {
         private readonly IDataService _dataService; // Service for data operations 
         private readonly IClaimWorkflowService _claimWorkflowService; // Handles claim status transitions
+        private readonly IDocumentAccessService _documentAccessService; // Validates document downloads
 
         // Constructor: injects the data service via dependency injection
-        public CoordinatorController(IDataService dataService, IClaimWorkflowService claimWorkflowService)
+        public CoordinatorController(
+            IDataService dataService,
+            IClaimWorkflowService claimWorkflowService,
+            IDocumentAccessService documentAccessService)
         {
             _dataService = dataService;
             _claimWorkflowService = claimWorkflowService;
+            _documentAccessService = documentAccessService;
         }
 
         #region Claim Review Dashboard
@@ -83,13 +88,16 @@ namespace Contract_Monthly_Claim_System.Controllers
         // Serves a stored document file for download
         public async Task<IActionResult> DownloadDocument(int documentId)
         {
-            var document = (await _dataService.GetDocumentsAsync()).FirstOrDefault(d => d.documentId == documentId);
-            if (document == null) return NotFound();
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            var currentUserRole = HttpContext.Session.GetString("UserRole");
+            if (currentUserId == null || string.IsNullOrEmpty(currentUserRole))
+                return RedirectToAction("Login", "Auth");
 
-            var fileData = await _dataService.GetDocumentFileAsync(documentId);
-            if (fileData == null) return NotFound();
+            var download = await _documentAccessService.GetAuthorizedDownloadAsync(documentId, currentUserId.Value, currentUserRole);
+            if (!download.Found) return NotFound();
+            if (!download.Authorized) return RedirectToAction("AccessDenied", "Auth");
 
-            return File(fileData, "application/octet-stream", document.fileName);
+            return File(download.FileData!, download.ContentType, download.FileName);
         }
 
         #endregion
