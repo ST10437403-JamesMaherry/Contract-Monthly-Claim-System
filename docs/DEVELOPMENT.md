@@ -16,13 +16,13 @@ SQLite is used through Entity Framework Core, so no separate database server is 
 2. Restore NuGet packages:
 
    ```powershell
-   dotnet restore ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj"
+   dotnet restore ".\Contract Monthly Claim System.slnx"
    ```
 
 3. Build the application:
 
    ```powershell
-   dotnet build ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj"
+   dotnet build ".\Contract Monthly Claim System.slnx"
    ```
 
 4. Run the web application:
@@ -57,11 +57,12 @@ The key may be a base64 value or plain text, but it must decode to 16, 24, or 32
 Before opening a pull request or merging a branch, run:
 
 ```powershell
-dotnet restore ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj"
-dotnet build ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj" --configuration Release --no-restore
+dotnet restore ".\Contract Monthly Claim System.slnx"
+dotnet build ".\Contract Monthly Claim System.slnx" --configuration Release --no-restore
+dotnet test ".\Contract Monthly Claim System.slnx" --configuration Release --no-build
 ```
 
-Automated builds run the same restore and build steps through GitHub Actions.
+Automated builds run the same restore, build, and test steps through GitHub Actions.
 
 ## Branch Workflow
 
@@ -76,6 +77,7 @@ This keeps the project history easy to read and shows the reason behind each cha
 ## Commit Checklist
 
 - The app builds locally.
+- The automated test suite passes locally.
 - Generated database files and uploads are not included.
 - The README or development guide is updated when setup steps change.
 - Comments explain intent where the code is not obvious.

@@ -15,7 +15,7 @@ env:
 
 jobs:
   build:
-    name: Build ASP.NET Core app
+    name: Build and test ASP.NET Core app
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -29,7 +29,10 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore packages
-        run: dotnet restore "./Contract Monthly Claim System/Contract Monthly Claim System.csproj"
+        run: dotnet restore "./Contract Monthly Claim System.slnx"
 
       - name: Build
-        run: dotnet build "./Contract Monthly Claim System/Contract Monthly Claim System.csproj" --configuration Release --no-restore
+        run: dotnet build "./Contract Monthly Claim System.slnx" --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test "./Contract Monthly Claim System.slnx" --configuration Release --no-build --logger trx --results-directory TestResults
