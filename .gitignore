@@ -63,6 +63,18 @@ project.lock.json
 project.fragment.lock.json
 artifacts/
 
+# Local application data
+# The database and encrypted uploads are generated during local development.
+**/app.db
+**/app.db-shm
+**/app.db-wal
+*.sqlite
+*.sqlite3
+**/App_Data/
+
+# The root .slnx file is the canonical solution entry point.
+Contract Monthly Claim System/Contract Monthly Claim System.sln
+
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 

@@ -45,6 +45,15 @@
 #*.gif   binary
 
 ###############################################################################
+# behavior for local database files
+#
+# SQLite runtime files are treated as binary when present locally.
+###############################################################################
+*.db      binary
+*.db-shm  binary
+*.db-wal  binary
+
+###############################################################################
 # diff behavior for common document formats
 # 
 # Convert binary document formats to text before diffing them. This feature

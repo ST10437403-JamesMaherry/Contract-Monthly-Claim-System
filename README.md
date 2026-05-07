@@ -141,8 +141,31 @@ The Contract Monthly Claim System (CMCS) is a comprehensive web-based MVC applic
 ### Installation Steps
 1. Clone the repository to your local machine
 2. Navigate to the project directory
-3. Run database migrations in package manager console:
-   Add-Migration InitialCreate (Only run this if no migrations exist)
-   Update-Database
-   Remove-Migration (only run if you want to remove the existing migrations)
+3. Restore packages and build the application:
+
+   ```powershell
+   dotnet restore ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj"
+   dotnet build ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj"
+   ```
+
+4. Run the application:
+
+   ```powershell
+   dotnet run --project ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj"
+   ```
+
+The app applies pending Entity Framework migrations on startup and creates a local SQLite database when needed.
    
+## Development
+
+The application can be restored, built, and run directly from the project file:
+
+```powershell
+dotnet restore ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj"
+dotnet build ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj"
+dotnet run --project ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj"
+```
+
+The app applies pending Entity Framework migrations on startup and creates a local SQLite database when needed.
+
+For the full local workflow, quality checks, and branch checklist, see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
