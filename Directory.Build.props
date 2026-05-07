@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <!-- Shared build defaults for every project in this repository. -->
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+</Project>
