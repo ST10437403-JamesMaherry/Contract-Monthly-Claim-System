@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="Contract Monthly Claim System/Contract Monthly Claim System.csproj" />
+  <Project Path="Contract Monthly Claim System.Tests/Contract Monthly Claim System.Tests.csproj" />
 </Solution>
