@@ -8,11 +8,13 @@ namespace Contract_Monthly_Claim_System.Controllers
     public class CoordinatorController : Controller
     {
         private readonly IDataService _dataService; // Service for data operations 
+        private readonly IClaimWorkflowService _claimWorkflowService; // Handles claim status transitions
 
         // Constructor: injects the data service via dependency injection
-        public CoordinatorController(IDataService dataService)
+        public CoordinatorController(IDataService dataService, IClaimWorkflowService claimWorkflowService)
         {
             _dataService = dataService;
+            _claimWorkflowService = claimWorkflowService;
         }
 
         #region Claim Review Dashboard
@@ -49,15 +51,12 @@ namespace Contract_Monthly_Claim_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveClaim(int claimId, string comments)
         {
-            var claims = await _dataService.GetClaimsAsync();
-            var claim = claims.FirstOrDefault(c => c.claimId == claimId);
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            if (currentUserId == null)
+                return RedirectToAction("Login", "Auth");
 
-            if (claim != null)
-            {
-                claim.statusId = 2; // Approved by Coordinator
-                await _dataService.UpdateClaimAsync(claim);
-                TempData["Success"] = $"Claim #{claimId} approved successfully!";
-            }
+            var result = await _claimWorkflowService.ApproveByCoordinatorAsync(claimId, currentUserId.Value, comments);
+            TempData[result.Success ? "Success" : "Error"] = result.Message;
 
             return RedirectToAction("ReviewClaims");
         }
@@ -67,15 +66,12 @@ namespace Contract_Monthly_Claim_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RejectClaim(int claimId, string comments)
         {
-            var claims = await _dataService.GetClaimsAsync();
-            var claim = claims.FirstOrDefault(c => c.claimId == claimId);
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            if (currentUserId == null)
+                return RedirectToAction("Login", "Auth");
 
-            if (claim != null)
-            {
-                claim.statusId = 4; // Rejected by Coordinator
-                await _dataService.UpdateClaimAsync(claim);
-                TempData["Success"] = $"Claim #{claimId} rejected!";
-            }
+            var result = await _claimWorkflowService.RejectByCoordinatorAsync(claimId, currentUserId.Value, comments);
+            TempData[result.Success ? "Success" : "Error"] = result.Message;
 
             return RedirectToAction("ReviewClaims");
         }

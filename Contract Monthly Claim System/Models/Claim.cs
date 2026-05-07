@@ -31,5 +31,6 @@ namespace Contract_Monthly_Claim_System.Models
         public virtual User User { get; set; }
         public virtual ClaimStatus Status { get; set; }
         public virtual ICollection<Document> Documents { get; set; } = new List<Document>();
+        public virtual ICollection<ClaimReview> ClaimReviews { get; set; } = new List<ClaimReview>();
     }
 }

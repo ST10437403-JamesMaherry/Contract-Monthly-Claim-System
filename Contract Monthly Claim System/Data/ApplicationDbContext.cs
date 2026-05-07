@@ -15,6 +15,7 @@ namespace Contract_Monthly_Claim_System.Data
         public DbSet<Claim> Claims { get; set; }
         public DbSet<Document> Documents { get; set; }
         public DbSet<ClaimStatus> ClaimStatuses { get; set; }
+        public DbSet<ClaimReview> ClaimReviews { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -43,6 +44,12 @@ namespace Contract_Monthly_Claim_System.Data
                 .HasKey(d => d.documentId);
             modelBuilder.Entity<Document>()
                 .Property(d => d.documentId)
+                .ValueGeneratedOnAdd();
+
+            modelBuilder.Entity<ClaimReview>()
+                .HasKey(cr => cr.claimReviewId);
+            modelBuilder.Entity<ClaimReview>()
+                .Property(cr => cr.claimReviewId)
                 .ValueGeneratedOnAdd();
 
             // Configure decimal precision for financial fields
@@ -99,6 +106,18 @@ namespace Contract_Monthly_Claim_System.Data
                 .Property(c => c.Notes)
                 .HasMaxLength(500);
 
+            modelBuilder.Entity<ClaimReview>()
+                .Property(cr => cr.reviewerRole)
+                .HasMaxLength(50);
+
+            modelBuilder.Entity<ClaimReview>()
+                .Property(cr => cr.action)
+                .HasMaxLength(50);
+
+            modelBuilder.Entity<ClaimReview>()
+                .Property(cr => cr.comments)
+                .HasMaxLength(500);
+
             // Configure relationships
             modelBuilder.Entity<Claim>()
                 .HasOne(c => c.User)
@@ -116,6 +135,18 @@ namespace Contract_Monthly_Claim_System.Data
                 .HasOne(c => c.Status)
                 .WithMany(s => s.Claims)
                 .HasForeignKey(c => c.statusId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ClaimReview>()
+                .HasOne(cr => cr.Claim)
+                .WithMany(c => c.ClaimReviews)
+                .HasForeignKey(cr => cr.claimId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ClaimReview>()
+                .HasOne(cr => cr.Reviewer)
+                .WithMany(u => u.ClaimReviews)
+                .HasForeignKey(cr => cr.reviewerUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Seed claim statuses

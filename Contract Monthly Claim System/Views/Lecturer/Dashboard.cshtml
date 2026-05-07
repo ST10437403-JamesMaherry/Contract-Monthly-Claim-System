@@ -87,6 +87,10 @@ else
             string statusText = "";
             string statusColor = "";
             int progress = 0;
+            var latestReview = claim.ClaimReviews?
+                .Where(r => !string.IsNullOrEmpty(r.comments))
+                .OrderByDescending(r => r.reviewedAt)
+                .FirstOrDefault();
 
             switch (claim.statusId)
             {
@@ -174,6 +178,17 @@ else
                             <span>Manager</span>
                             <span>Payment</span>
                         </div>
+
+                        @if (latestReview != null)
+                        {
+                            <div class="mt-3 p-2 bg-light rounded">
+                                <strong>Latest Reviewer Comment:</strong>
+                                <div class="small text-muted">
+                                    @latestReview.action on @latestReview.reviewedAt.ToString("dd MMM yyyy HH:mm")
+                                </div>
+                                <div>@latestReview.comments</div>
+                            </div>
+                        }
                     </div>
                 </div>
             </div>

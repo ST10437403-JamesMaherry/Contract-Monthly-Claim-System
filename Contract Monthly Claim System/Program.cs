@@ -20,6 +20,7 @@ namespace Contract_Monthly_Claim_System
                 options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
             });
             builder.Services.AddScoped<IDataService, SqlDataService>();
+            builder.Services.AddScoped<IClaimWorkflowService, ClaimWorkflowService>();
             builder.Services.AddScoped<IPdfService, PdfService>();
             builder.Services.AddScoped<Services.IAuthenticationService, Services.AuthenticationService>();
 

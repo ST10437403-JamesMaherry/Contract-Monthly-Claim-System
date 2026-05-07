@@ -16,6 +16,14 @@
     </div>
 }
 
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
 @if (!Model.Any())
 {
     <div class="card">
@@ -36,6 +44,7 @@ else
         {
             var user = (ViewBag.Users as List<Contract_Monthly_Claim_System.Models.User>)?.FirstOrDefault(u => u.userId == claim.userId);
             var claimDocuments = allDocuments.Where(d => d.claimId == claim.claimId).ToList();
+            var claimReviews = claim.ClaimReviews?.OrderBy(r => r.reviewedAt).ToList() ?? new List<Contract_Monthly_Claim_System.Models.ClaimReview>();
 
             <div class="col-12">
                 <div class="card card-pending">
@@ -68,6 +77,27 @@ else
                                     </div>
                                 }
 
+                                @if (claimReviews.Any())
+                                {
+                                    <div class="mb-3">
+                                        <strong>Review History:</strong>
+                                        <div class="mt-2">
+                                            @foreach (var review in claimReviews)
+                                            {
+                                                <div class="p-2 bg-light rounded mb-2">
+                                                    <div class="small text-muted">
+                                                        @review.action by @(review.Reviewer?.firstName) @(review.Reviewer?.lastName) on @review.reviewedAt.ToString("dd MMM yyyy HH:mm")
+                                                    </div>
+                                                    @if (!string.IsNullOrEmpty(review.comments))
+                                                    {
+                                                        <div>@review.comments</div>
+                                                    }
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+
                                 @if (claimDocuments.Any())
                                 {
                                     <div class="mb-3">
@@ -96,7 +126,7 @@ else
                                     <input type="hidden" name="claimId" value="@claim.claimId" />
                                     <div class="mb-3">
                                         <label class="form-label">Coordinator Comments</label>
-                                        <textarea name="comments" class="form-control" rows="2" placeholder="Enter approval comments..."></textarea>
+                                        <textarea name="comments" class="form-control" rows="2" maxlength="500" placeholder="Enter approval comments..."></textarea>
                                     </div>
                                     <div class="d-flex gap-2">
                                         <button type="submit" class="btn btn-success">✅ Approve</button>

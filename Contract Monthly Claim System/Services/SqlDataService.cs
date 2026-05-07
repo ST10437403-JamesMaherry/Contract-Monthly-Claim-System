@@ -13,6 +13,7 @@ namespace Contract_Monthly_Claim_System.Services
         Task<Contract_Monthly_Claim_System.Models.Claim> GetClaimAsync(int claimId);
         Task AddClaimAsync(Contract_Monthly_Claim_System.Models.Claim claim);
         Task UpdateClaimAsync(Contract_Monthly_Claim_System.Models.Claim claim);
+        Task<List<ClaimReview>> GetClaimReviewsAsync();
 
         // Document metadata and file operations
         Task<List<Document>> GetDocumentsAsync();
@@ -81,6 +82,8 @@ namespace Contract_Monthly_Claim_System.Services
                 .Include(c => c.User)          // Load related user data
                 .Include(c => c.Status)        // Load related status data
                 .Include(c => c.Documents)     // Load related documents
+                .Include(c => c.ClaimReviews)
+                    .ThenInclude(cr => cr.Reviewer)
                 .ToListAsync();
         }
 
@@ -91,6 +94,8 @@ namespace Contract_Monthly_Claim_System.Services
                 .Include(c => c.User)
                 .Include(c => c.Status)
                 .Include(c => c.Documents)
+                .Include(c => c.ClaimReviews)
+                    .ThenInclude(cr => cr.Reviewer)
                 .FirstOrDefaultAsync(c => c.claimId == claimId);
         }
 
@@ -113,6 +118,16 @@ namespace Contract_Monthly_Claim_System.Services
 
             _context.Claims.Update(claim);
             await _context.SaveChangesAsync();
+        }
+
+        // Retrieves review history for all claims
+        public async Task<List<ClaimReview>> GetClaimReviewsAsync()
+        {
+            return await _context.ClaimReviews
+                .Include(cr => cr.Claim)
+                .Include(cr => cr.Reviewer)
+                .OrderByDescending(cr => cr.reviewedAt)
+                .ToListAsync();
         }
 
         #endregion

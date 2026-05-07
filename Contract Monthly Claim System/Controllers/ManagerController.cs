@@ -8,11 +8,13 @@ namespace Contract_Monthly_Claim_System.Controllers
     public class ManagerController : Controller
     {
         private readonly IDataService _dataService; // Service for data operations 
+        private readonly IClaimWorkflowService _claimWorkflowService; // Handles claim status transitions
 
         // Constructor: injects the data service via dependency injection
-        public ManagerController(IDataService dataService)
+        public ManagerController(IDataService dataService, IClaimWorkflowService claimWorkflowService)
         {
             _dataService = dataService;
+            _claimWorkflowService = claimWorkflowService;
         }
 
         #region Approval Dashboard
@@ -60,17 +62,14 @@ namespace Contract_Monthly_Claim_System.Controllers
         // Grants final approval to a claim 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> FinalApprove(int claimId)
+        public async Task<IActionResult> FinalApprove(int claimId, string comments)
         {
-            var claims = await _dataService.GetClaimsAsync();
-            var claim = claims.FirstOrDefault(c => c.claimId == claimId);
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            if (currentUserId == null)
+                return RedirectToAction("Login", "Auth");
 
-            if (claim != null)
-            {
-                claim.statusId = 3; // Approved by Manager
-                await _dataService.UpdateClaimAsync(claim);
-                TempData["Success"] = $"Claim #{claimId} approved! Ready for payment.";
-            }
+            var result = await _claimWorkflowService.ApproveByManagerAsync(claimId, currentUserId.Value, comments);
+            TempData[result.Success ? "Success" : "Error"] = result.Message;
 
             return RedirectToAction("ApproveClaims");
         }
@@ -78,17 +77,14 @@ namespace Contract_Monthly_Claim_System.Controllers
         // Rejects a claim at the manager level
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RejectClaim(int claimId)
+        public async Task<IActionResult> RejectClaim(int claimId, string comments)
         {
-            var claims = await _dataService.GetClaimsAsync();
-            var claim = claims.FirstOrDefault(c => c.claimId == claimId);
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            if (currentUserId == null)
+                return RedirectToAction("Login", "Auth");
 
-            if (claim != null)
-            {
-                claim.statusId = 5; // Rejected by Manager
-                await _dataService.UpdateClaimAsync(claim);
-                TempData["Success"] = $"Claim #{claimId} rejected!";
-            }
+            var result = await _claimWorkflowService.RejectByManagerAsync(claimId, currentUserId.Value, comments);
+            TempData[result.Success ? "Success" : "Error"] = result.Message;
 
             return RedirectToAction("ApproveClaims");
         }
@@ -102,15 +98,12 @@ namespace Contract_Monthly_Claim_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkAsPaid(int claimId)
         {
-            var claims = await _dataService.GetClaimsAsync();
-            var claim = claims.FirstOrDefault(c => c.claimId == claimId);
+            var currentUserId = HttpContext.Session.GetInt32("UserId");
+            if (currentUserId == null)
+                return RedirectToAction("Login", "Auth");
 
-            if (claim != null)
-            {
-                claim.statusId = 6; // Paid
-                await _dataService.UpdateClaimAsync(claim);
-                TempData["Success"] = $"Claim #{claimId} marked as paid!";
-            }
+            var result = await _claimWorkflowService.MarkAsPaidAsync(claimId, currentUserId.Value);
+            TempData[result.Success ? "Success" : "Error"] = result.Message;
 
             return RedirectToAction("ApproveClaims");
         }
