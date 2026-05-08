@@ -1,4 +1,4 @@
-﻿@{
+@{
     Layout = null;
 }
 
@@ -8,96 +8,23 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login - CMCS</title>
-    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <style>
-            body {
-                background-color: #ffffff;
-                color: #000000;
-                min-height: 100vh;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            }
-
-            .login-card {
-                max-width: 400px;
-                width: 100%;
-                background: #ffffff;
-                border: 1px solid #000000;
-                border-radius: 8px;
-                box-shadow: none;
-            }
-
-            .login-header {
-                background: #000000;
-                color: #ffffff;
-                padding: 24px;
-                border-radius: 8px 8px 0 0;
-                text-align: center;
-            }
-
-            .login-body {
-                padding: 24px;
-            }
-
-            .form-label {
-                color: #000000;
-                font-weight: 600;
-            }
-
-            .form-control {
-                background: #ffffff;
-                color: #000000;
-                border: 1px solid #000000;
-                border-radius: 4px;
-            }
-
-                .form-control:focus {
-                    border-color: #000000;
-                    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.15);
-                }
-
-            .btn-login {
-                background: #000000;
-                border: 1px solid #000000;
-                color: #ffffff;
-                padding: 12px;
-                font-weight: bold;
-            }
-
-                .btn-login:hover {
-                    background: #ffffff;
-                    color: #000000;
-                }
-
-            .alert-danger {
-                background: #ffffff;
-                color: #000000;
-                border: 1px solid #000000;
-            }
-
-            hr {
-                border-top: 1px solid #000000;
-            }
-
-            .text-muted {
-                color: #000000 !important;
-            }
-    </style>
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/css/site.css" rel="stylesheet" asp-append-version="true" />
 </head>
-<body>
-    <div class="login-card">
-        <div class="login-header">
-            <h3 class="mb-2">📋 CMCS</h3>
-            <p class="mb-0 small">Contract Monthly Claim System</p>
+<body class="auth-page">
+    <div class="auth-card">
+        <div class="auth-card-header">
+            <p class="eyebrow mb-2">Secure workspace</p>
+            <h1 class="h3">CMCS</h1>
+            <p class="mb-0 mt-2">Contract Monthly Claim System</p>
         </div>
-        <div class="login-body">
+
+        <div class="auth-card-body">
             @if (ViewBag.Error != null)
             {
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <strong>❌ Error:</strong> @ViewBag.Error
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" style="filter: invert(0);"></button>
+                    <strong>Error:</strong> @ViewBag.Error
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             }
 
@@ -114,20 +41,21 @@
                     <input type="password" name="password" class="form-control" placeholder="Enter your password" required />
                 </div>
 
-                <button type="submit" class="btn btn-login w-100">
-                    🔐 Login
+                <button type="submit" class="btn btn-primary btn-login">
+                    Login
                 </button>
             </form>
 
             <hr class="my-4" />
 
-            <div class="text-center small">
-                <p class="mb-1">🔒 Secure login • Session-based authentication</p>
-                <p class="mb-0">Contact HR if you need password assistance</p>
+            <div class="text-center small text-muted">
+                <p class="mb-1">Secure session-based authentication</p>
+                <p class="mb-0">Contact HR if you need password assistance.</p>
             </div>
         </div>
     </div>
 
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
 </body>
 </html>

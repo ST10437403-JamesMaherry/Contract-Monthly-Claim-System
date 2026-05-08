@@ -11,7 +11,7 @@
         @if (TempData["Success"] != null)
         {
             <div class="alert alert-success alert-dismissible fade show">
-                ✅ @TempData["Success"]
+                @TempData["Success"]
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         }
@@ -19,7 +19,7 @@
         @if (TempData["Error"] != null)
         {
             <div class="alert alert-danger alert-dismissible fade show">
-                ❌ @TempData["Error"]
+                @TempData["Error"]
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         }
@@ -30,7 +30,7 @@
             <div class="row g-3">
                 <!-- Personal Information Section -->
                 <div class="col-12">
-                    <h6 class="text-primary fw-bold mb-3">👤 Personal Information</h6>
+                    <h6 class="text-primary fw-bold mb-3">Personal Information</h6>
                 </div>
 
                 <div class="col-md-6">
@@ -60,7 +60,7 @@
 
                 <!-- Role and Compensation Section -->
                 <div class="col-12 mt-4">
-                    <h6 class="text-primary fw-bold mb-3">💼 Role & Compensation</h6>
+                    <h6 class="text-primary fw-bold mb-3">Role & Compensation</h6>
                 </div>
 
                 <div class="col-md-6">
@@ -87,10 +87,10 @@
 
                 <!-- Password Section -->
                 <div class="col-12 mt-4">
-                    <h6 class="text-primary fw-bold mb-3">🔐 Initial Password</h6>
+                    <h6 class="text-primary fw-bold mb-3">Initial Password</h6>
                     <div class="alert alert-info">
                         <small>
-                            <strong>ℹ️ Note:</strong> Set a temporary password for the new user.
+                            <strong>Note:</strong> Set a temporary password for the new user.
                             They should change it after their first login.
                         </small>
                     </div>
@@ -122,10 +122,10 @@
 
             <div class="d-flex justify-content-between mt-4">
                 <a href="@Url.Action("HRDashboard", "HR")" class="btn btn-outline-secondary">
-                    ← Back to Users
+                    Back to Users
                 </a>
                 <button type="submit" class="btn btn-primary" id="submitBtn">
-                    ➕ Add User
+                    Add User
                 </button>
             </div>
         </form>
