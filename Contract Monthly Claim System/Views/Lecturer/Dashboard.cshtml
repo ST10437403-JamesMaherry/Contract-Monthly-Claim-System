@@ -4,6 +4,10 @@
     var lecturers = ViewBag.Lecturers as List<Contract_Monthly_Claim_System.Models.User> ?? new List<Contract_Monthly_Claim_System.Models.User>();
     var currentUser = ViewBag.CurrentUser as Contract_Monthly_Claim_System.Models.User;
     var currentUserId = ViewBag.CurrentUserId as int? ?? 1;
+    var totalClaims = claims.Count;
+    var approvedClaims = claims.Count(c => c.statusId == 3 || c.statusId == 6);
+    var pendingClaims = claims.Count(c => c.statusId == 1 || c.statusId == 2);
+    var rejectedClaims = claims.Count(c => c.statusId == 4 || c.statusId == 5);
 }
 
 @if (TempData["Success"] != null)
@@ -14,59 +18,76 @@
     </div>
 }
 
-<div class="row g-4 mb-5">
-    <div class="col-md-6">
-        <div class="card card-action card-hover h-100">
-            <div class="card-body text-center">
-                <h5 class="card-title">Submit New Claim</h5>
-                <p class="card-text">Submit hours worked and supporting documents</p>
-                <a href="@Url.Action("SubmitClaim", "Lecturer")" class="btn btn-primary">Submit Claim</a>
+<div class="dashboard-hero">
+    <div class="hero-panel">
+        <p class="eyebrow mb-2">Lecturer workspace</p>
+        <h2>
+            @if (currentUser != null)
+            {
+                <text>Welcome back, @currentUser.firstName.</text>
+            }
+            else
+            {
+                <text>Track claims from submission to payment.</text>
+            }
+        </h2>
+        <p>Submit supporting documents, monitor review progress, and keep every monthly claim visible from one dashboard.</p>
+    </div>
+
+    <div class="hero-kpi">
+        <span>Total claims</span>
+        <strong>@totalClaims</strong>
+    </div>
+</div>
+
+<div class="row g-4 mb-5 dashboard-stats">
+    <div class="col-lg-3 col-6">
+        <div class="card stat-card text-center">
+            <div class="card-body">
+                <div class="stat-number">@totalClaims</div>
+                <small class="stat-label">Total</small>
             </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card card-hover h-100">
-            <div class="card-body text-center">
-                <h5 class="card-title">Claim Statistics</h5>
-                @{
-                    var totalClaims = claims.Count;
-                    var approvedClaims = claims.Count(c => c.statusId == 3 || c.statusId == 6);
-                    var pendingClaims = claims.Count(c => c.statusId == 1 || c.statusId == 2);
-                    var rejectedClaims = claims.Count(c => c.statusId == 4 || c.statusId == 5);
-                }
-                <div class="row text-center">
-                    <div class="col-3">
-                        <div class="stat-number">@totalClaims</div>
-                        <small class="stat-label">Total</small>
-                    </div>
-                    <div class="col-3">
-                        <div class="stat-number text-success">@approvedClaims</div>
-                        <small class="stat-label">Approved</small>
-                    </div>
-                    <div class="col-3">
-                        <div class="stat-number text-warning">@pendingClaims</div>
-                        <small class="stat-label">Pending</small>
-                    </div>
-                    <div class="col-3">
-                        <div class="stat-number text-danger">@rejectedClaims</div>
-                        <small class="stat-label">Rejected</small>
-                    </div>
-                </div>
+    <div class="col-lg-3 col-6">
+        <div class="card stat-card text-center card-approved">
+            <div class="card-body">
+                <div class="stat-number text-success">@approvedClaims</div>
+                <small class="stat-label">Approved</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-6">
+        <div class="card stat-card text-center card-pending">
+            <div class="card-body">
+                <div class="stat-number text-warning">@pendingClaims</div>
+                <small class="stat-label">Pending</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-6">
+        <div class="card stat-card text-center">
+            <div class="card-body">
+                <div class="stat-number text-danger">@rejectedClaims</div>
+                <small class="stat-label">Rejected</small>
             </div>
         </div>
     </div>
 </div>
 
-<h4 class="mb-4">
-    @if (currentUser != null)
-    {
-        <text>@currentUser.firstName @currentUser.lastName's Claims</text>
-    }
-    else
-    {
-        <text>My Claims</text>
-    }
-</h4>
+<div class="section-title">
+    <h4>
+        @if (currentUser != null)
+        {
+            <text>@currentUser.firstName @currentUser.lastName's Claims</text>
+        }
+        else
+        {
+            <text>My Claims</text>
+        }
+    </h4>
+    <a href="@Url.Action("SubmitClaim", "Lecturer")" class="btn btn-primary">Submit Claim</a>
+</div>
 
 @if (!claims.Any())
 {

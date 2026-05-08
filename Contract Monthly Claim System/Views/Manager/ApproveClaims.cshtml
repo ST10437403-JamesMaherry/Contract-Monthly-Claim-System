@@ -5,10 +5,22 @@
     var currentFilter = ViewBag.CurrentFilter as string ?? "pending";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h4>Claim Management - Academic Manager</h4>
-    <div class="d-flex align-items-center gap-3">
-        <!-- Filter Dropdown -->
+<div class="dashboard-hero">
+    <div class="hero-panel">
+        <p class="eyebrow mb-2">Manager approvals</p>
+        <h2>Make final claim decisions with full review context.</h2>
+        <p>Filter by workflow state, inspect supporting documents, and move approved claims toward payment.</p>
+    </div>
+
+    <div class="hero-kpi">
+        <span>Visible claims</span>
+        <strong>@Model.Count</strong>
+    </div>
+</div>
+
+<div class="section-title">
+    <h4>Claim Queue</h4>
+    <div class="d-flex align-items-center gap-3 flex-wrap">
         <div class="dropdown">
             <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
                 @(currentFilter switch
@@ -221,10 +233,10 @@ else
                                         </div>
                                         <div class="d-flex gap-2 flex-wrap">
                                             <button type="submit" class="btn btn-success">
-                                                ✅ Approve Claim
+                                                Approve Claim
                                             </button>
                                             <button type="submit" formaction="@Url.Action("RejectClaim", "Manager")" class="btn btn-danger">
-                                                ❌ Reject Claim
+                                                Reject Claim
                                             </button>
                                         </div>
                                     </form>
@@ -236,7 +248,7 @@ else
                                     <form method="post" action="@Url.Action("MarkAsPaid", "Manager")" class="mb-2">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="claimId" value="@claim.claimId" />
-                                        <button type="submit" class="btn btn-success">💰 Mark as Paid</button>
+                                        <button type="submit" class="btn btn-success">Mark as Paid</button>
                                     </form>
                                 }
                             </div>
@@ -248,7 +260,7 @@ else
                                 <form method="post" action="@Url.Action("MarkAsPaid", "Manager")" class="mb-2">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="claimId" value="@claim.claimId" />
-                                    <button type="submit" class="btn btn-success">💰 Mark as Paid</button>
+                                    <button type="submit" class="btn btn-success">Mark as Paid</button>
                                 </form>
                             </div>
                         }

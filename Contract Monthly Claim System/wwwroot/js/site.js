@@ -1,78 +1,61 @@
-﻿document.addEventListener('DOMContentLoaded', function () {
-    initializeSidebar();
-    initializeAnimations();
-
-    if (document.querySelector('.dashboard-stats')) {
-        initializeDashboard();
-    }
+document.addEventListener('DOMContentLoaded', function () {
+    initializeTooltips();
+    initializeQuickActions();
+    initializeFileList();
 });
 
-function initializeSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const mainContent = document.querySelector('.main-content');
-    const toggleButtons = document.querySelectorAll('.sidebar-toggle');
-
-    // Check saved state
-    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-    if (isCollapsed) {
-        sidebar.classList.add('collapsed');
-        mainContent.classList.add('expanded');
+function initializeTooltips() {
+    if (typeof bootstrap === 'undefined') {
+        return;
     }
 
-    // Toggle button listeners
-    toggleButtons.forEach(btn => {
-        btn.addEventListener('click', function () {
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
-
-            // Save state
-            const isNowCollapsed = sidebar.classList.contains('collapsed');
-            localStorage.setItem('sidebarCollapsed', isNowCollapsed);
-        });
+    var tooltipElements = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltipElements.forEach(function (element) {
+        new bootstrap.Tooltip(element);
     });
 }
 
-function initializeAnimations() {
-    // Simple hover effects
-    const cards = document.querySelectorAll('.card-hover');
-    cards.forEach(card => {
-        card.addEventListener('mouseenter', function () {
-            this.style.transform = 'translateY(-3px)';
-        });
+function initializeQuickActions() {
+    var quickActionCards = document.querySelectorAll('.quick-action-card');
 
-        card.addEventListener('mouseleave', function () {
-            this.style.transform = '';
-        });
-    });
-}
-
-// Dashboard specific functionality
-function initializeDashboard() {
-    // Initialize tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-
-    // Animate progress bars when they come into view
-    const progressBars = document.querySelectorAll('.progress-bar');
-    progressBars.forEach(bar => {
-        const width = bar.style.width;
-        bar.style.width = '0%';
-        setTimeout(() => {
-            bar.style.transition = 'width 1s ease-in-out';
-            bar.style.width = width;
-        }, 100);
-    });
-
-    // Add click handlers for quick actions
-    const quickActionCards = document.querySelectorAll('.quick-action-card');
-    quickActionCards.forEach(card => {
+    quickActionCards.forEach(function (card) {
         card.addEventListener('click', function () {
-            const action = this.getAttribute('data-action');
+            var action = card.getAttribute('data-action');
             if (action) {
                 window.location.href = action;
             }
         });
     });
+}
+
+function initializeFileList() {
+    var fileInput = document.getElementById('fileUpload');
+    var fileList = document.getElementById('fileList');
+
+    if (!fileInput || !fileList) {
+        return;
+    }
+
+    fileInput.addEventListener('change', function () {
+        var files = Array.prototype.slice.call(fileInput.files || []);
+
+        if (files.length === 0) {
+            fileList.innerHTML = '';
+            return;
+        }
+
+        fileList.innerHTML = files.map(function (file) {
+            var size = (file.size / 1024 / 1024).toFixed(2);
+            return '<div class="soft-panel mb-2"><strong>' + escapeHtml(file.name) + '</strong><span class="text-muted ms-2">' + size + ' MB</span></div>';
+        }).join('');
+    });
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }

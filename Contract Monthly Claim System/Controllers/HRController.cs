@@ -125,6 +125,9 @@ namespace Contract_Monthly_Claim_System.Controllers
         // GET
         public async Task<IActionResult> EditUser(int id)
         {
+            ViewBag.UserRole = "HR";
+            ViewData["Title"] = "Edit User";
+
             var user = (await _dataService.GetUsersAsync()).FirstOrDefault(u => u.userId == id);
             if (user == null)
             {
@@ -151,6 +154,9 @@ namespace Contract_Monthly_Claim_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditUser(EditUserViewModel model)
         {
+            ViewBag.UserRole = "HR";
+            ViewData["Title"] = "Edit User";
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -203,10 +209,10 @@ namespace Contract_Monthly_Claim_System.Controllers
         }
 
         // Generates and downloads a PDF user directory report (optionally filtered by role)
-        public async Task<IActionResult> DownloadUserReportPdf(string role = null)
+        public async Task<IActionResult> DownloadUserReportPdf(string? role = null)
         {
             var users = await _dataService.GetUsersAsync();
-            var pdfBytes = _pdfService.GenerateUserReport(users, role);
+            var pdfBytes = _pdfService.GenerateUserReport(users, role ?? string.Empty);
 
             var fileName = string.IsNullOrEmpty(role)
                 ? $"User-Directory-Report-{DateTime.Now:yyyyMMdd}.pdf"
