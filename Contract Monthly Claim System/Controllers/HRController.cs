@@ -11,13 +11,15 @@ namespace Contract_Monthly_Claim_System.Controllers
     {
         private readonly IDataService _dataService;      // Service for data operations (users, claims)
         private readonly IPdfService _pdfService;        // Service for generating PDF reports
+        private readonly IReportExportService _reportExportService; // Service for CSV reporting exports
         private readonly Services.IAuthenticationService _authService;  // Service for password management
 
         // Constructor: injects required services via dependency injection
-        public HRController(IDataService dataService, IPdfService pdfService, Services.IAuthenticationService authService)
+        public HRController(IDataService dataService, IPdfService pdfService, IReportExportService reportExportService, Services.IAuthenticationService authService)
         {
             _dataService = dataService;
             _pdfService = pdfService;
+            _reportExportService = reportExportService;
             _authService = authService;
         }
 
@@ -36,6 +38,12 @@ namespace Contract_Monthly_Claim_System.Controllers
             ViewBag.ApprovedClaims = claims?.Count(c => c.statusId == 3 || c.statusId == 6) ?? 0;
             ViewBag.PendingClaims = claims?.Count(c => c.statusId == 1 || c.statusId == 2) ?? 0;
             ViewBag.TotalUsers = users?.Count ?? 0;
+            ViewBag.PayableClaims = claims?
+                .Where(c => c.statusId == (int)ClaimStatusType.ApprovedByManager || c.statusId == (int)ClaimStatusType.Paid)
+                .OrderByDescending(c => c.submissionDate)
+                .ToList() ?? new List<Claim>();
+            ViewBag.CurrentBatchYear = DateTime.Now.Year;
+            ViewBag.CurrentBatchMonth = DateTime.Now.Month;
 
             return View(users); // Renders Views/HR/HRDashboard.cshtml
         }
@@ -106,11 +114,12 @@ namespace Contract_Monthly_Claim_System.Controllers
                     // Hash the password using authentication service
                     user.passwordHash = _authService.HashPassword(password, out string salt);
                     user.passwordSalt = salt;
+                    user.mustChangePassword = true;
 
                     // Add user to database
                     await _dataService.AddUserAsync(user);
 
-                    TempData["Success"] = $"User {user.firstName} {user.lastName} added successfully with password set!";
+                    TempData["Success"] = $"User {user.firstName} {user.lastName} added successfully with a temporary password. They must change it on first login.";
                     return RedirectToAction("HRDashboard"); // Return to HR dashboard
                 }
                 catch (Exception ex)
@@ -202,10 +211,20 @@ namespace Contract_Monthly_Claim_System.Controllers
             var claims = await _dataService.GetClaimsAsync();
             var users = await _dataService.GetUsersAsync();
 
-            var approvedClaims = claims?.Where(c => c.statusId == 3 || c.statusId == 6).ToList() ?? new List<Claim>();
+            var approvedClaims = claims?.Where(c => c.statusId == (int)ClaimStatusType.ApprovedByManager || c.statusId == (int)ClaimStatusType.Paid).ToList() ?? new List<Claim>();
             var pdfBytes = _pdfService.GeneratePaymentReport(approvedClaims, users);
 
             return File(pdfBytes, "application/pdf", $"Payment-Report-{DateTime.Now:yyyyMMdd}.pdf");
+        }
+
+        // Generates and downloads a CSV report of all approved/paid claims
+        public async Task<IActionResult> DownloadPaymentReportCsv()
+        {
+            var claims = await _dataService.GetClaimsAsync();
+            var users = await _dataService.GetUsersAsync();
+            var csvBytes = _reportExportService.GeneratePaymentReportCsv(claims ?? new List<Claim>(), users);
+
+            return File(csvBytes, "text/csv", $"Payment-Report-{DateTime.Now:yyyyMMdd}.csv");
         }
 
         // Generates and downloads a PDF user directory report (optionally filtered by role)
@@ -219,6 +238,62 @@ namespace Contract_Monthly_Claim_System.Controllers
                 : $"{role}-Users-Report-{DateTime.Now:yyyyMMdd}.pdf";
 
             return File(pdfBytes, "application/pdf", fileName);
+        }
+
+        // Generates and downloads a CSV user directory report (optionally filtered by role)
+        public async Task<IActionResult> DownloadUserReportCsv(string? role = null)
+        {
+            var users = await _dataService.GetUsersAsync();
+            var csvBytes = _reportExportService.GenerateUserReportCsv(users, role);
+
+            var fileName = string.IsNullOrEmpty(role)
+                ? $"User-Directory-Report-{DateTime.Now:yyyyMMdd}.csv"
+                : $"{role}-Users-Report-{DateTime.Now:yyyyMMdd}.csv";
+
+            return File(csvBytes, "text/csv", fileName);
+        }
+
+        // Generates and downloads a single claim invoice PDF
+        public async Task<IActionResult> DownloadInvoicePdf(int claimId)
+        {
+            var claim = await _dataService.GetClaimAsync(claimId);
+            if (claim == null)
+            {
+                TempData["Error"] = "Claim not found.";
+                return RedirectToAction("HRDashboard");
+            }
+
+            var user = claim.User;
+            if (user == null)
+            {
+                var users = await _dataService.GetUsersAsync();
+                user = users.FirstOrDefault(u => u.userId == claim.userId);
+            }
+
+            if (user == null)
+            {
+                TempData["Error"] = "Unable to generate invoice because the lecturer could not be found.";
+                return RedirectToAction("HRDashboard");
+            }
+
+            var pdfBytes = _pdfService.GenerateInvoice(claim, user);
+            return File(pdfBytes, "application/pdf", $"Invoice-Claim-{claim.claimId}-{DateTime.Now:yyyyMMdd}.pdf");
+        }
+
+        // Generates and downloads a monthly payment batch for payroll processing
+        public async Task<IActionResult> DownloadMonthlyPaymentBatchCsv(int? year = null, int? month = null)
+        {
+            var batchYear = year ?? DateTime.Now.Year;
+            var batchMonth = month ?? DateTime.Now.Month;
+
+            if (batchMonth < 1 || batchMonth > 12)
+                return BadRequest("Month must be between 1 and 12.");
+
+            var claims = await _dataService.GetClaimsAsync();
+            var users = await _dataService.GetUsersAsync();
+            var csvBytes = _reportExportService.GenerateMonthlyPaymentBatchCsv(claims ?? new List<Claim>(), users, batchYear, batchMonth);
+
+            return File(csvBytes, "text/csv", $"Payment-Batch-{batchYear:D4}-{batchMonth:D2}.csv");
         }
 
         #endregion

@@ -15,6 +15,7 @@ namespace Contract_Monthly_Claim_System.Models
         // Authentication Fields
         public string passwordHash { get; set; }
         public string passwordSalt { get; set; }
+        public bool mustChangePassword { get; set; }
 
         // Navigation properties
         public virtual ICollection<Claim> Claims { get; set; } = new List<Claim>();

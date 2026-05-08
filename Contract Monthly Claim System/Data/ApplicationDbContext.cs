@@ -90,6 +90,10 @@ namespace Contract_Monthly_Claim_System.Data
                 .Property(u => u.userRole)
                 .HasMaxLength(50);
 
+            modelBuilder.Entity<User>()
+                .Property(u => u.mustChangePassword)
+                .HasDefaultValue(false);
+
             modelBuilder.Entity<Document>()
                 .Property(d => d.fileName)
                 .HasMaxLength(255);
@@ -179,7 +183,8 @@ namespace Contract_Monthly_Claim_System.Data
                     userRole = "Lecturer",
                     hourlyRate = 150.00m,
                     passwordHash = mattPassword.Item1,
-                    passwordSalt = mattPassword.Item2
+                    passwordSalt = mattPassword.Item2,
+                    mustChangePassword = false
                 },
                 new User
                 {
@@ -191,7 +196,8 @@ namespace Contract_Monthly_Claim_System.Data
                     userRole = "Lecturer",
                     hourlyRate = 175.00m,
                     passwordHash = victoriaPassword.Item1,
-                    passwordSalt = victoriaPassword.Item2
+                    passwordSalt = victoriaPassword.Item2,
+                    mustChangePassword = false
                 },
                 new User
                 {
@@ -203,7 +209,8 @@ namespace Contract_Monthly_Claim_System.Data
                     userRole = "Coordinator",
                     hourlyRate = 200.00m,
                     passwordHash = sarahPassword.Item1,
-                    passwordSalt = sarahPassword.Item2
+                    passwordSalt = sarahPassword.Item2,
+                    mustChangePassword = false
                 },
                 new User
                 {
@@ -215,7 +222,8 @@ namespace Contract_Monthly_Claim_System.Data
                     userRole = "Manager",
                     hourlyRate = 250.00m,
                     passwordHash = davidPassword.Item1,
-                    passwordSalt = davidPassword.Item2
+                    passwordSalt = davidPassword.Item2,
+                    mustChangePassword = false
                 },
                 new User
                 {
@@ -227,7 +235,8 @@ namespace Contract_Monthly_Claim_System.Data
                     userRole = "HR",
                     hourlyRate = 0.00m,
                     passwordHash = hrPassword.Item1,
-                    passwordSalt = hrPassword.Item2
+                    passwordSalt = hrPassword.Item2,
+                    mustChangePassword = false
                 }
             );
 

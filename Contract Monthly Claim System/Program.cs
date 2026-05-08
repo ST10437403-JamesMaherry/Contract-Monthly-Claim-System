@@ -26,6 +26,7 @@ namespace Contract_Monthly_Claim_System
             builder.Services.AddScoped<IDocumentStorageService, DocumentStorageService>();
             builder.Services.AddScoped<IDocumentAccessService, DocumentAccessService>();
             builder.Services.AddScoped<IPdfService, PdfService>();
+            builder.Services.AddScoped<IReportExportService, ReportExportService>();
             builder.Services.AddScoped<Services.IAuthenticationService, Services.AuthenticationService>();
 
             // Anti-forgery tokens protect all unsafe HTTP requests.
@@ -82,6 +83,23 @@ namespace Contract_Monthly_Claim_System
 
             // Enable session middleware BEFORE authorization
             app.UseSession();
+
+            // Users created with temporary passwords must update them before using the app.
+            app.Use(async (context, next) =>
+            {
+                var mustChangePassword = context.Session.GetString("MustChangePassword") == "true";
+                var path = context.Request.Path;
+
+                if (mustChangePassword &&
+                    !path.StartsWithSegments("/Auth/ChangePassword") &&
+                    !path.StartsWithSegments("/Auth/Logout"))
+                {
+                    context.Response.Redirect("/Auth/ChangePassword");
+                    return;
+                }
+
+                await next();
+            });
 
             app.UseAuthorization();
 

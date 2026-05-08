@@ -12,7 +12,8 @@ namespace Contract_Monthly_Claim_System.Services
         string HashPassword(string password, out string salt);
         bool VerifyPassword(string password, string hash, string salt);
         Task<User?> ValidateUserAsync(string email, string password);
-        Task<bool> SetUserPasswordAsync(int userId, string password);
+        Task<bool> SetUserPasswordAsync(int userId, string password, bool mustChangePassword = false);
+        Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword);
     }
 
     public class AuthenticationService : IAuthenticationService
@@ -68,13 +69,32 @@ namespace Contract_Monthly_Claim_System.Services
         }
 
         // Set/update user password (HR only)
-        public async Task<bool> SetUserPasswordAsync(int userId, string password)
+        public async Task<bool> SetUserPasswordAsync(int userId, string password, bool mustChangePassword = false)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return false;
 
             user.passwordHash = _passwordHasher.HashPassword(user, password);
             user.passwordSalt = string.Empty;
+            user.mustChangePassword = mustChangePassword;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        // Changes a user's password after verifying the current password.
+        public async Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null || string.IsNullOrEmpty(user.passwordHash))
+                return false;
+
+            if (!VerifyPassword(currentPassword, user.passwordHash, user.passwordSalt))
+                return false;
+
+            user.passwordHash = _passwordHasher.HashPassword(user, newPassword);
+            user.passwordSalt = string.Empty;
+            user.mustChangePassword = false;
 
             await _context.SaveChangesAsync();
             return true;
