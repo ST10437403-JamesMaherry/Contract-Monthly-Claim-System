@@ -7,12 +7,23 @@
     var approvedClaims = ViewBag.ApprovedClaims ?? 0;
     var pendingClaims = ViewBag.PendingClaims ?? 0;
     var totalUsers = users.Count;
+    var payableClaims = ViewBag.PayableClaims as List<Claim> ?? new List<Claim>();
+    var batchYear = ViewBag.CurrentBatchYear is int currentYear ? currentYear : DateTime.Now.Year;
+    var batchMonth = ViewBag.CurrentBatchMonth is int currentMonth ? currentMonth : DateTime.Now.Month;
 }
 
 @if (TempData["Success"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
@@ -177,34 +188,89 @@
 </div>
 
 <div class="row g-4 mb-4">
-    <div class="col-lg-4">
+    <div class="col-xl-3 col-lg-6">
         <div class="card h-100 card-approved">
             <div class="card-body d-flex flex-column">
                 <h5 class="card-title">Payment Processing Report</h5>
                 <p class="card-text flex-grow-1">Download approved and paid claims for payroll processing.</p>
-                <a href="@Url.Action("DownloadPaymentReportPdf", "HR")" class="btn btn-success mt-auto">Download Payment PDF</a>
+                <div class="d-grid gap-2 mt-auto">
+                    <a href="@Url.Action("DownloadPaymentReportPdf", "HR")" class="btn btn-success">Download PDF</a>
+                    <a href="@Url.Action("DownloadPaymentReportCsv", "HR")" class="btn btn-outline-success">Download CSV</a>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-lg-4">
+    <div class="col-xl-3 col-lg-6">
+        <div class="card h-100">
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">Monthly Payment Batch</h5>
+                <p class="card-text">Export a payroll-ready CSV batch by payment month.</p>
+                <form method="get" action="@Url.Action("DownloadMonthlyPaymentBatchCsv", "HR")" class="mt-auto">
+                    <div class="row g-2">
+                        <div class="col-7">
+                            <label class="form-label small">Year</label>
+                            <input type="number" name="year" class="form-control" value="@batchYear" min="2020" max="2100" />
+                        </div>
+                        <div class="col-5">
+                            <label class="form-label small">Month</label>
+                            <input type="number" name="month" class="form-control" value="@batchMonth" min="1" max="12" />
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 mt-3">Download Batch CSV</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-3 col-lg-6">
         <div class="card h-100 card-action">
             <div class="card-body d-flex flex-column">
                 <h5 class="card-title">User Directory Report</h5>
                 <p class="card-text flex-grow-1">Export the complete user directory for HR records.</p>
-                <a href="@Url.Action("DownloadUserReportPdf", "HR")" class="btn btn-primary mt-auto">Download Users PDF</a>
+                <div class="d-grid gap-2 mt-auto">
+                    <a href="@Url.Action("DownloadUserReportPdf", "HR")" class="btn btn-primary">Download PDF</a>
+                    <a href="@Url.Action("DownloadUserReportCsv", "HR")" class="btn btn-outline-primary">Download CSV</a>
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-lg-4">
+    <div class="col-xl-3 col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">Claim Invoices</h5>
+                <p class="card-text">Generate invoice PDFs for approved or paid claims.</p>
+                @if (!payableClaims.Any())
+                {
+                    <p class="text-muted mb-0">No payable claims are ready for invoicing.</p>
+                }
+                else
+                {
+                    <div class="d-grid gap-2">
+                        @foreach (var claim in payableClaims)
+                        {
+                            <a href="@Url.Action("DownloadInvoicePdf", "HR", new { claimId = claim.claimId })" class="btn btn-outline-primary">
+                                Claim #@claim.claimId - R @claim.totalAmount.ToString("F2")
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-12">
         <div class="card h-100">
             <div class="card-body">
                 <h5 class="card-title">Role Reports</h5>
                 <p class="card-text">Export user directories by role.</p>
-                <div class="d-grid gap-2">
-                    <a href="@Url.Action("DownloadUserReportPdf", "HR", new { role = "Lecturer" })" class="btn btn-outline-primary">Lecturers</a>
-                    <a href="@Url.Action("DownloadUserReportPdf", "HR", new { role = "Coordinator" })" class="btn btn-outline-primary">Coordinators</a>
-                    <a href="@Url.Action("DownloadUserReportPdf", "HR", new { role = "Manager" })" class="btn btn-outline-primary">Managers</a>
-                    <a href="@Url.Action("DownloadUserReportPdf", "HR", new { role = "HR" })" class="btn btn-outline-primary">HR</a>
+                <div class="row g-2">
+                    @foreach (var role in new[] { "Lecturer", "Coordinator", "Manager", "HR" })
+                    {
+                        <div class="col-md-3">
+                            <div class="d-grid gap-2">
+                                <a href="@Url.Action("DownloadUserReportPdf", "HR", new { role })" class="btn btn-outline-primary">@role PDF</a>
+                                <a href="@Url.Action("DownloadUserReportCsv", "HR", new { role })" class="btn btn-outline-secondary">@role CSV</a>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         </div>

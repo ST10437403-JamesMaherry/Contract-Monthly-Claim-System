@@ -12,7 +12,7 @@ namespace Contract_Monthly_Claim_System.Services
     {
         byte[] GeneratePaymentReport(List<Claim> claims, List<User> users);
         byte[] GenerateInvoice(Claim claim, User user);
-        byte[] GenerateUserReport(List<User> users, string filterRole = null);
+        byte[] GenerateUserReport(List<User> users, string? filterRole = null);
     }
 
     public class PdfService : IPdfService
@@ -189,7 +189,7 @@ namespace Contract_Monthly_Claim_System.Services
             return document.GeneratePdf();
         }
 
-        public byte[] GenerateUserReport(List<User> users, string filterRole = null)
+        public byte[] GenerateUserReport(List<User> users, string? filterRole = null)
         {
             // Filter users by role if specified
             var filteredUsers = string.IsNullOrEmpty(filterRole)
