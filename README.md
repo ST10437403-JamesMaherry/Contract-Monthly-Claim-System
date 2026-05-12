@@ -110,6 +110,64 @@ Local development files should not be committed:
 
 Uploaded documents are stored under `App_Data/Uploads` and encrypted before being written to disk. The development encryption key is stored in `appsettings.Development.json`. Production should use a secret value from environment configuration or a secret store.
 
+## Application Screenshots
+
+The screenshots below illustrate the key views available to each role within the system.
+
+### Authentication
+
+**Login Screen**
+
+<img width="537" height="580" alt="LOGIN SCREEN" src="https://github.com/user-attachments/assets/d772798f-dafb-42ca-a87c-c253bb3d8515" />
+
+---
+
+### Lecturer
+
+**Dashboard**
+
+<img width="1886" height="912" alt="LECTURER DASH" src="https://github.com/user-attachments/assets/2ce908c3-cc2d-4df4-b277-3a13a97ceaf4" />
+
+**Submit Claim**
+
+<img width="1611" height="877" alt="LECTURER SUBMIT CLAIM" src="https://github.com/user-attachments/assets/ca727e38-1661-4b55-98ce-e4bea1552486" />
+
+---
+
+### Coordinator
+
+**Review Claims**
+
+<img width="1890" height="865" alt="COORDINATOR REVIEW CLAIMS" src="https://github.com/user-attachments/assets/96746418-8e15-48bc-9bbd-4fe972b765ca" />
+
+---
+
+### Manager
+
+**Approve Claims**
+
+<img width="1626" height="872" alt="MANAGER APPROVE CLAIMS" src="https://github.com/user-attachments/assets/83c23cfa-b640-4d47-a13d-3e7cfc97ad0f" />
+
+---
+
+### Human Resources
+
+**Dashboard**
+
+<img width="1895" height="937" alt="HR DASHBOARD" src="https://github.com/user-attachments/assets/41cc3c84-4895-47c1-9117-dfea9c0da8a3" />
+
+
+**Add User**
+
+<img width="1608" height="854" alt="HR ADD USER" src="https://github.com/user-attachments/assets/03a8486c-bdcd-482b-9e7d-dac9392a6f26" />
+
+
+**Export Reports**
+
+<img width="1607" height="636" alt="HR EXPORT REPORTS" src="https://github.com/user-attachments/assets/dbfb974a-df99-436f-abcc-34e7da36c677" />
+
+---
+
 ## Running Tests
 
 Run the full test suite:
@@ -142,8 +200,6 @@ Current CI behavior:
 Current CD status:
 
 - Automated deployment is not configured yet.
-- A future deployment pipeline can be added after the CI build and tests pass.
-- Recommended deployment targets include Azure App Service, IIS, or a container-based host.
 
 ## Common Development Commands
 
