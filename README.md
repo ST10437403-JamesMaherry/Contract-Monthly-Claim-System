@@ -1,171 +1,170 @@
-# Contract Monthly Claim System (CMCS) 
+# Contract Monthly Claim System (CMCS)
 
-## Project Overview
-The Contract Monthly Claim System (CMCS) is a comprehensive web-based MVC application designed to streamline the monthly claim submission and approval process for Independent Contractor (IC) lecturers. This system represents a transformative approach to administrative processes in academic institutions, offering a seamless platform for claim management from submission through to final approval and payment.
+CMCS is an ASP.NET Core MVC application for managing monthly lecturer claims. Lecturers submit claims, coordinators review them, managers approve them, and HR manages users, reports, invoices, and payment batches.
 
-## User Roles & System Workflow
+## Main Features
 
-### 1. Lecturer Role
-**Primary Functions:**
-- Submit monthly claims with automated calculations
-- Upload supporting documents (PDF, DOCX, XLSX)
-- Track claim status through visual progress indicators
-- View personal claim history and statistics
+- Role-based dashboards for Lecturers, Coordinators, Managers, and HR.
+- Secure session-based login with hashed passwords.
+- HR-created users must change their temporary password on first login.
+- Lecturer claim submission with automatic total calculation.
+- Coordinator and Manager review workflow with audit trail comments.
+- Secure document uploads with file validation, encrypted storage, and authorized downloads.
+- HR user management with hourly-rate control.
+- PDF and CSV exports for users and payment reports.
+- Invoice PDF downloads for payable claims.
+- Monthly payment batch CSV exports for payroll processing.
+- Automated tests and GitHub Actions build checks.
 
-**Key Features:**
-- Automatic user identification via session management
-- Pre-populated hourly rates set by HR
-- Real-time total amount calculation
-- Hours validation (0.5-180 hours per month)
-- Secure document upload with encryption
+## Tech Stack
 
-### 2. Programme Coordinator Role
-**Primary Functions:**
-- Review submitted claims from lecturers
-- Approve or reject claims with comments
-- Monitor claim workflow progress
-- Access coordinator-specific dashboard
+- .NET 8
+- ASP.NET Core MVC
+- Entity Framework Core
+- SQLite
+- QuestPDF
+- xUnit
+- GitHub Actions
 
-### 3. Academic Manager Role
-**Primary Functions:**
-- Final approval authority for claims
-- Oversee entire claim workflow
-- Access management reports and analytics
-- Make final decisions on claim payments
+## Project Structure
 
-### 4. HR Administrator Role
-**Primary Functions:**
-- User management and profile creation
-- Set and update lecturer hourly rates
-- Generate system reports and analytics
-- System administration and oversight
+```text
+Contract Monthly Claim System/        Main MVC web application
+Contract Monthly Claim System.Tests/  Unit and integration tests
+.github/workflows/build.yml           CI workflow
+docs/                                 Development documentation
+```
 
-## Technical Implementation
+## Prerequisites
 
-### Authentication & Security
-- **Custom Authentication System**: Session-based login with password hashing using SHA256 and unique salts
-- **Role-Based Access Control**: Authorization filters preventing unauthorized page access
-- **Session Management**: Automatic timeout (2 hours) with secure cookie settings
-- **Data Encryption**: AES encryption for stored document files
+Install the following before running the project:
 
-### Database Architecture
-- **SQLite Database** with Entity Framework Core code-first approach
-- **Complete Data Migration** from JSON files to relational database
-- **Automatic ID Generation** with proper foreign key relationships
-- **Seeded Initial Data** including sample users, claims, and status workflows
+- .NET 8 SDK
+- Git
+- Visual Studio 2022, Rider, or VS Code with the C# extension
 
-### Key Technical Features
-- **Repository Pattern** with IDataService interface for data abstraction
-- **Dependency Injection** throughout the application
-- **Entity Framework Migrations** for database schema management
-- **Professional Error Handling** with user-friendly messages
+SQLite is used through Entity Framework Core, so no separate database server is needed.
 
-### Authentication System
-✅ **Custom Login System** with session management  
-✅ **Password Security** using SHA256 hashing with unique salts  
-✅ **Role-Based Authorization** preventing unauthorized access  
-✅ **Session Validation** across all protected controllers  
+## How To Run The Project
 
-### Database Integration
-✅ **Full SQLite Implementation** with Entity Framework Core  
-✅ **Database Migrations** for proper schema management  
-✅ **Encrypted Document Storage** maintaining file security  
-✅ **Relational Data Model** with proper foreign key constraints  
-
-### User Experience Enhancements
-✅ **Automatic User Recognition** - lecturers no longer manually select identity once logged in 
-✅ **Pre-filled Hourly Rates** from HR-defined user profiles  
-✅ **Real-time Calculations** as hours are entered in forms  
-✅ **Role-Based Navigation** with appropriate dashboard redirection  
-
-### Claim Management Improvements
-✅ **Simplified Submission Process** - removed user selection dropdown  
-✅ **Enhanced Validation** for hours worked and file uploads  
-✅ **Improved Error Handling** with contextual error messages  
-✅ **Advanced Form UX** with character counters and file previews  
-
-### HR System Implementation
-✅ **User Management** - HR can create and manage all user accounts  
-✅ **Rate Management** - Set and update lecturer hourly rates  
-✅ **Report Generation** - System analytics and reporting capabilities  
-✅ **Administrative Oversight** - Complete system administration access  
-
-## Database Schema
-
-### Users Table
-- 'userId' (Primary Key, Auto-increment)
-- 'firstName', 'lastName', 'email', 'phoneNumber'
-- 'userRole' (Lecturer/Coordinator/Manager/HR)
-- 'hourlyRate' (Decimal, set by HR)
-- 'passwordHash', 'passwordSalt' (Authentication)
-
-### Claims Table
-- 'claimId' (Primary Key, Auto-increment)
-- 'userId' (Foreign Key)
-- 'hoursWorked', 'hourlyRate', 'totalAmount' (Decimal)
-- 'statusId' (Foreign Key)
-- 'submissionDate' (DateTime)
-- 'Notes' (Optional comments)
-
-### Documents Table
-- 'documentId' (Primary Key, Auto-increment)
-- 'claimId' (Foreign Key)
-- 'fileName', 'fileType', 'fileSize'
-- 'uploadDate' (DateTime)
-
-### ClaimStatuses Table
-- 'statusId' (Primary Key)
-- 'statusName' (Submitted/Approved by Coordinator/Approved by Manager/Rejected/Paid)
-
-## Default Login Credentials
-
-**Lecturer Accounts:**
-- Email: 'mattjones@university.co.za' | Password: 'password123'
-- Email: 'crownvic@university.co.za' | Password: 'password123'
-
-**Coordinator Account:**
-- Email: 'sarahw@university.co.za' | Password: 'password123'
-
-**Manager Account:**
-- Email: 'davidb@university.co.za' | Password: 'password123'
-
-**HR Administrator:**
-- Email: 'hr@university.co.za' | Password: 'admin123'
-
-## Installation & Setup
-
-### Prerequisites
-- .NET 8.0 SDK
-- SQLite (included with EF Core)
-
-### Installation Steps
-1. Clone the repository to your local machine
-2. Navigate to the project directory
-3. Restore packages and build the application:
+1. Clone the repository:
 
    ```powershell
-   dotnet restore ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj"
-   dotnet build ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj"
+   git clone <repository-url>
+   cd Contract-Monthly-Claim-System
    ```
 
-4. Run the application:
+2. Restore NuGet packages:
 
    ```powershell
-   dotnet run --project ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj"
+   dotnet restore ".\Contract Monthly Claim System.slnx"
    ```
 
-The app applies pending Entity Framework migrations on startup and creates a local SQLite database when needed.
-   
-## Development
+3. Build the solution:
 
-The application can be restored, built, and run directly from the project file:
+   ```powershell
+   dotnet build ".\Contract Monthly Claim System.slnx"
+   ```
+
+4. Trust the local HTTPS certificate if needed:
+
+   ```powershell
+   dotnet dev-certs https --trust
+   ```
+
+5. Run the web application:
+
+   ```powershell
+   dotnet run --project ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj" --launch-profile "Contract_Monthly_Claim_System"
+   ```
+
+6. Open the app in your browser:
+
+   ```text
+   https://localhost:7203
+   ```
+
+The application applies pending Entity Framework migrations on startup. A local SQLite database file named `app.db` is created when needed.
+
+## Default Login Accounts
+
+| Role | Email | Password |
+| --- | --- | --- |
+| Lecturer | `mattjones@university.co.za` | `password123` |
+| Lecturer | `crownvic@university.co.za` | `password123` |
+| Coordinator | `sarahw@university.co.za` | `password123` |
+| Manager | `davidb@university.co.za` | `password123` |
+| HR | `hr@university.co.za` | `admin123` |
+
+If local passwords or data are changed during testing, delete the local database files and run the app again to recreate the seeded data.
+
+## Local Database And Files
+
+Local development files should not be committed:
+
+- `app.db`
+- `app.db-shm`
+- `app.db-wal`
+- `App_Data/Uploads`
+- `TestResults`
+
+Uploaded documents are stored under `App_Data/Uploads` and encrypted before being written to disk. The development encryption key is stored in `appsettings.Development.json`. Production should use a secret value from environment configuration or a secret store.
+
+## Running Tests
+
+Run the full test suite:
 
 ```powershell
-dotnet restore ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj"
-dotnet build ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj"
+dotnet test ".\Contract Monthly Claim System.slnx"
+```
+
+Recommended local quality check before pushing:
+
+```powershell
+dotnet restore ".\Contract Monthly Claim System.slnx"
+dotnet build ".\Contract Monthly Claim System.slnx" --configuration Release --no-restore
+dotnet test ".\Contract Monthly Claim System.slnx" --configuration Release --no-build
+```
+
+## CI/CD
+
+The repository includes a GitHub Actions workflow at `.github/workflows/build.yml`.
+
+Current CI behavior:
+
+- Runs on every push to any branch.
+- Runs on pull requests targeting `main` or `master`.
+- Uses the .NET 8 SDK.
+- Restores NuGet packages.
+- Builds the solution in Release mode.
+- Runs the test suite and writes test results to `TestResults`.
+
+Current CD status:
+
+- Automated deployment is not configured yet.
+- A future deployment pipeline can be added after the CI build and tests pass.
+- Recommended deployment targets include Azure App Service, IIS, or a container-based host.
+
+## Common Development Commands
+
+Add a migration:
+
+```powershell
+dotnet ef migrations add <MigrationName> --project ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj" --startup-project ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj"
+```
+
+Apply migrations manually:
+
+```powershell
+dotnet ef database update --project ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj" --startup-project ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj"
+```
+
+Run the app without the launch profile:
+
+```powershell
 dotnet run --project ".\Contract Monthly Claim System\Contract Monthly Claim System.csproj"
 ```
 
-The app applies pending Entity Framework migrations on startup and creates a local SQLite database when needed.
+## More Documentation
 
-For the full local workflow, quality checks, and branch checklist, see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+See `docs/DEVELOPMENT.md` for the development workflow, branch checklist, and local quality checks.
