@@ -9,7 +9,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="QuestPDF" Version="2026.2.4" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.15" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.0" />
 	</ItemGroup>
